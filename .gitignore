@@ -11,6 +11,11 @@ yarn.lock
 # production
 /build
 
+# python
+__pycache__/
+build/
+dist/
+
 # misc
 .eslintcache
 .DS_Store
