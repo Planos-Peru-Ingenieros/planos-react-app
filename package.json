@@ -12,11 +12,16 @@
   },
   "license": "MIT",
   "author": "The CoreUI Team (https://github.com/orgs/coreui/people)",
+  "main": "main/main.js",
   "scripts": {
     "build": "vite build",
     "lint": "eslint",
     "serve": "vite preview",
-    "start": "vite"
+    "start": "vite",
+    "py-install": "pip install -r requirements.txt",
+    "py-build": "python -m PyInstaller --workpath=engine/build --distpath=engine/dist api.spec",
+    "electron-dev": "electron .",
+    "electron-build": "electron-builder --config electron-builder.config.json"
   },
   "dependencies": {
     "@coreui/chartjs": "^4.1.0",
