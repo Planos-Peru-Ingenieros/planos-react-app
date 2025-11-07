@@ -1,18 +1,14 @@
-const {
-  app,
-  BrowserWindow
-} = require('electron')
+const { app, BrowserWindow } = require('electron')
 
 const path = require('path')
-const fs = require("fs")
-const isDev = require("electron-is-dev")
-const execFile = require("child_process").execFile
+const fs = require('fs')
+const isDev = require('electron-is-dev')
+const execFile = require('child_process').execFile
 
-const API_PROD_PATH = path.join(process.resourcesPath, "../lib/api/api.exe")
-const API_DEV_PATH = path.join(__dirname, "../backend/api.py")
+const API_PROD_PATH = path.join(process.resourcesPath, '../lib/api/api.exe')
+const API_DEV_PATH = path.join(__dirname, '../backend/api.py')
 const INDEX_PATH = path.join(__dirname, '../build/index.html')
 const app_instance = app.requestSingleInstanceLock()
-
 
 // check if current app is Production or Development using electron-is-dev library
 // current app is not production, just run the API from api.py,else run the api from API_PROD_PATH
@@ -21,9 +17,7 @@ if (isDev) {
     require('electron-reloader')(module)
   } catch (_) {}
 
-  const {
-    PythonShell
-  } = require('python-shell')
+  const { PythonShell } = require('python-shell')
 
   PythonShell.run(API_DEV_PATH, null, function (err, results) {
     if (err) console.log(err)
@@ -43,8 +37,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true
-    }
+      enableRemoteModule: true,
+    },
   })
 
   // and load the index.html of the app.
@@ -53,13 +47,12 @@ function createWindow() {
   // Open the DevTools.
   if (isDev) mainWindow.webContents.openDevTools()
 
-
   // only one instance exists
   // change to focus if window is minimized
   if (!app_instance) {
     app.quit()
   } else {
-    app.on("second-instance", (event, commandline, workingDirectory) => {
+    app.on('second-instance', (event, commandline, workingDirectory) => {
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore()
         mainWindow.focus()
@@ -81,12 +74,11 @@ app.whenReady().then(() => {
 })
 
 // kill all child process before-quit
-app.on("before-quit", function () {
-
+app.on('before-quit', function () {
   if (isDev) {
     PythonShell.kill(API_DEV_PATH)
   } else {
-    execFile().kill("SIGINT")
+    execFile().kill('SIGINT')
   }
 })
 
