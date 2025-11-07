@@ -3,10 +3,9 @@
 block_cipher = None
 
 
-a = Analysis(['engine\\api.py'],
+a = Analysis(['backend\\api.py'],
              pathex=[],
              binaries=[],
-             datas=[('public\\assets\\media\\icon\\app.ico','.')],
              hiddenimports=["uvicorn.logging",
                             "uvicorn.lifespan.off",
                             "uvicorn.lifespan.on",
@@ -46,7 +45,6 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=True,
-          icon='public\\assets\\media\\icon\\app.ico'
           )
 coll = COLLECT(exe,
                a.binaries,
