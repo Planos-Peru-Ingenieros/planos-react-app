@@ -1,6 +1,22 @@
 import React, { useState } from 'react'
+import Select from 'react-select'
 import axios from 'axios'
-import { CCard, CCardHeader, CCardBody, CButton, CForm, CFormInput } from '@coreui/react'
+import {
+  CCard,
+  CCardHeader,
+  CCardBody,
+  CButton,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CCol,
+} from '@coreui/react'
+
+const options = [
+  { value: 'chocolate', label: 'Chocolate' },
+  { value: 'strawberry', label: 'Strawberry' },
+  { value: 'vanilla', label: 'Vanilla' },
+]
 
 const Cotizaciones = () => {
   const [path, setPath] = useState('Z:\\')
@@ -12,7 +28,7 @@ const Cotizaciones = () => {
       })
       console.log(response.data)
     } catch (error) {
-      console.error('Error opening explorer:', error)
+      alert('Error opening explorer: ' + (error.response?.data || error.message))
     }
   }
 
@@ -21,16 +37,15 @@ const Cotizaciones = () => {
       <CCard className="mb-4">
         <CCardHeader>Crear Cotizaciones</CCardHeader>
         <CCardBody>
-          <CForm>
-            <CFormInput
-              type="text"
-              id="exampleFormControlInput1"
-              label="Dirección"
-              value={path}
-              onChange={(e) => setPath(e.target.value)}
-              placeholder="Z:\"
-              aria-describedby="exampleFormControlInputHelpInline"
-            />
+          <CForm className="row g-3">
+            <CCol md={6}>
+              <CFormLabel htmlFor="user">Usuario</CFormLabel>
+              <Select options={options} />
+            </CCol>
+            <CCol md={6}>
+              <CFormLabel htmlFor="user">Usuario</CFormLabel>
+              <Select options={options} />
+            </CCol>
             <CButton color="primary" onClick={handleOpenExplorer} className="mt-3">
               Abrir Explorador
             </CButton>
