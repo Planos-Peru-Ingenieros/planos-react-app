@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Select from 'react-select'
+import {
+  CCardHeader,
+  CFormInput,
+  CFormLabel,
+  CCol,
+  CRow,
+  CForm,
+  CFormTextarea,
+} from '@coreui/react'
 
 export default function CrearCotizacion() {
   const [cotizacion, setCotizaciones] = useState([])
@@ -490,17 +499,14 @@ export default function CrearCotizacion() {
   return (
     <div className="container">
       <div className="card mt-3">
-        <div className="card-header">
-          <h4 className="card-title">Crear Cotización</h4>
-          <p className="card-title-desc">Llena el formulario para crear una nueva cotización.</p>
-        </div>
+        <CCardHeader>Llena el formulario para crear una nueva cotización.</CCardHeader>
         <div className="card-body">
           <form onSubmit={handleSubmit}>
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">
-                  Usuario <span style={{ color: 'red' }}>*</span>
-                </label>
+                <CFormLabel htmlFor="user">
+                  Usuario<span style={{ color: 'red' }}>*</span>
+                </CFormLabel>
                 <Select
                   options={usuarios.map((usuario) => ({
                     value: usuario.username, // Asegúrate de que 'username' es único
@@ -568,60 +574,52 @@ export default function CrearCotizacion() {
                 />
               </div>
             </div>
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">DNI / RUC</label>
-                <input type="text" className="form-control" name="dni" />
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label">
+            <CRow className="g-3">
+              <CCol md={6}>
+                <CFormLabel htmlFor="dni">DNI / RUC</CFormLabel>
+                <CFormInput type="text" name="dni" id="dni" />
+              </CCol>
+              <CCol md={6}>
+                <CFormLabel htmlFor="cliente">
                   Cliente / Empresa <span style={{ color: 'red' }}>*</span>
-                </label>
-                <input type="text" className="form-control" name="cliente" required />
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Teléfono</label>
-                <input type="text" className="form-control" name="telefono" />
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label">
+                </CFormLabel>
+                <CFormInput type="text" name="cliente" id="cliente" required />
+              </CCol>
+              <CCol md={6}>
+                <CFormLabel htmlFor="telefono">Teléfono</CFormLabel>
+                <CFormInput type="text" name="telefono" id="telefono" />
+              </CCol>
+              <CCol md={6}>
+                <CFormLabel htmlFor="ubicacion">
                   Ubicación <span style={{ color: 'red' }}>*</span>
-                </label>
-                <input type="text" className="form-control" name="ubicacion" required />
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">
-                Detalles <span style={{ color: 'red' }}>*</span>
-              </label>
-              <textarea
-                className="form-control"
-                name="detalles"
-                rows="3"
-                value={detalles}
-                onChange={(e) => setDetalles(e.target.value)}
-                required
-              ></textarea>
-            </div>
-
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">
+                </CFormLabel>
+                <CFormInput type="text" name="ubicacion" id="ubicacion" required />
+              </CCol>
+              <CCol md={12}>
+                <CFormLabel htmlFor="detalles">
+                  Detalles <span className="text-danger">*</span>
+                </CFormLabel>
+                <CFormTextarea
+                  name="detalles"
+                  rows="3"
+                  value={detalles}
+                  onChange={(e) => setDetalles(e.target.value)}
+                  required
+                ></CFormTextarea>
+              </CCol>
+              <CCol md={6}>
+                <CFormLabel>
                   Número de Pisos <span className="text-danger">*</span>
-                </label>
-                <input type="text" className="form-control" name="pisos" required />
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label">
+                </CFormLabel>
+                <CFormInput type="text" name="pisos" required />
+              </CCol>
+              <CCol md={6}>
+                <CFormLabel htmlFor="area">
                   Área (m²) aprox.<span style={{ color: 'red' }}>*</span>
-                </label>
-                <input type="number" step="0.01" className="form-control" name="area" required />
-              </div>
-            </div>
+                </CFormLabel>
+                <CFormInput type="number" step="0.01" name="area" required />
+              </CCol>
+            </CRow>
             {/* Campo para ingresar el monto total */}
             <div className="mb-3">
               <label className="form-label">
