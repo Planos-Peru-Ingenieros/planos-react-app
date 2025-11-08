@@ -6,6 +6,7 @@ block_cipher = None
 a = Analysis(['backend\\api.py'],
              pathex=[],
              binaries=[],
+             datas=[('public\\favicon.ico','.')],
              hiddenimports=["uvicorn.logging",
                             "uvicorn.lifespan.off",
                             "uvicorn.lifespan.on",
@@ -45,6 +46,7 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=True,
+          icon='public\\favicon.ico'
           )
 coll = COLLECT(exe,
                a.binaries,

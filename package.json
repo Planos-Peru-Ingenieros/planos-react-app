@@ -1,14 +1,14 @@
 {
-  "name": "@coreui/coreui-free-react-admin-template",
-  "version": "5.5.0",
-  "description": "CoreUI Free React Admin Template",
+  "name": "planos-peru",
+  "version": "1.0.1",
+  "description": "Planos Perú",
   "homepage": ".",
   "bugs": {
-    "url": "https://github.com/coreui/coreui-free-react-admin-template/issues"
+    "url": "https://github.com/BrianVdeV/planos-react-app/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:coreui/coreui-free-react-admin-template.git"
+    "url": "https://github.com/BrianVdeV/planos-react-app"
   },
   "license": "MIT",
   "author": "The CoreUI Team (https://github.com/orgs/coreui/people)",

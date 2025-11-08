@@ -1,6 +1,6 @@
 {
   "appId": "com.company.app-name",
-  "productName": "My Awesome App",
+  "productName": "Planos Perú",
   "copyright": "Copyright © year ${author}",
   "files": ["main/**/*", "build/**/*"],
   "extraFiles": {
@@ -14,7 +14,7 @@
   },
   "win": {
     "target": "nsis",
-    "icon": "public/assets/media/icon/app.ico"
+    "icon": "public/favicon.ico"
   },
   "nsis": {
     "oneClick": false,
