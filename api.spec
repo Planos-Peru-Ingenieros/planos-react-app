@@ -6,7 +6,7 @@ block_cipher = None
 a = Analysis(['backend\\api.py'],
              pathex=[],
              binaries=[],
-             datas=[('public\\favicon.ico','.')],
+             datas=[('public\\favicon.ico','.'),('backend\\docs', 'docs')],
              hiddenimports=["uvicorn.logging",
                             "uvicorn.lifespan.off",
                             "uvicorn.lifespan.on",

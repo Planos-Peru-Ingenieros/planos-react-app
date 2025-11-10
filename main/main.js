@@ -61,54 +61,11 @@ function createWindow() {
   }
 }
 
-function autoUpdater() {
-  autoUpdater.setFeedURL({
-    provider: 'github',
-    owner: 'BrianVdeV',
-    repo: 'planos-react-app',
-    token: process.env.GITHUB_TOKEN,
-  })
-
-  // Configuración del autoUpdater
-  autoUpdater.autoDownload = true
-  autoUpdater.checkForUpdatesAndNotify() // Este ya hace la verificación y notificación
-
-  autoUpdater.on('update-available', () => {
-    console.log('Actualización disponible. Descargando...')
-  })
-
-  autoUpdater.on('update-downloaded', async () => {
-    console.log('Actualización descargada.')
-
-    const result = await dialog.showMessageBox(win, {
-      type: 'question',
-      buttons: ['Reiniciar ahora', 'Más tarde'],
-      defaultId: 0,
-      cancelId: 1,
-      title: 'Actualización lista',
-      message: 'Se ha descargado una nueva versión de Planos Perú.',
-      detail: '¿Deseas reiniciar la aplicación ahora para aplicar la actualización?',
-    })
-
-    if (result.response === 0) {
-      // Reinicia e instala
-      autoUpdater.quitAndInstall(false, true)
-    } else {
-      console.log('El usuario decidió actualizar más tarde.')
-    }
-  })
-
-  autoUpdater.on('error', (err) => {
-    console.error('Error en el actualizador:', err)
-  })
-}
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow()
-  autoUpdater()
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
