@@ -1,5 +1,5 @@
 const { app, BrowserWindow } = require('electron')
-
+const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const fs = require('fs')
 const isDev = require('electron-is-dev')
@@ -66,6 +66,7 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow()
+  autoUpdater.checkForUpdatesAndNotify()
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.

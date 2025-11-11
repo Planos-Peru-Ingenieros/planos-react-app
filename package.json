@@ -21,7 +21,8 @@
     "py-install": "pip install -r requirements.txt",
     "py-build": "python -m PyInstaller --workpath=backend/build --distpath=backend/dist api.spec",
     "electron-dev": "electron .",
-    "electron-build": "electron-builder --config electron-builder.config.json"
+    "electron-build": "electron-builder --config electron-builder.config.json",
+    "release": "electron-builder --config electron-builder.config.json --win --publish=always"
   },
   "dependencies": {
     "@coreui/chartjs": "^4.1.0",
@@ -37,6 +38,7 @@
     "classnames": "^2.5.1",
     "core-js": "^3.46.0",
     "electron-is-dev": "^1.2.0",
+    "electron-updater": "^6.6.2",
     "prop-types": "^15.8.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -64,5 +66,14 @@
     "python-shell": "^3.0.0",
     "sass": "^1.93.2",
     "vite": "^7.1.12"
+  },
+  "build": {
+    "appId": "com.planosperu.electron",
+    "publish": {
+      "provider": "github",
+      "owner": "BrianVdev",
+      "repo": "planos-react-app",
+      "releaseType": "release"
+    }
   }
 }
