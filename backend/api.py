@@ -1,10 +1,15 @@
 import os
-from datetime import datetime
+import json
+import calendar
+from datetime import datetime, date
 import sys
 import tempfile
 import traceback
+from collections import defaultdict
 import fitz
-from fastapi import FastAPI, Request
+import requests
+from requests.auth import HTTPDigestAuth
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import xlwings as xw
@@ -27,13 +32,9 @@ app.add_middleware(
 def get_resource_path(relative_path):
     """Devuelve la ruta absoluta al recurso, funciona dentro y fuera de PyInstaller"""
     try:
-        # Modo PyInstaller
         base_path = sys._MEIPASS
     except Exception:
-        # Modo script normal
-        # Usa la ruta del directorio donde está ESTE archivo .py
         base_path = os.path.dirname(os.path.abspath(__file__))
-
     return os.path.join(base_path, relative_path)
 
 
@@ -250,6 +251,288 @@ def cotizaciones(data):
     return ruta_salida
 
 
+IP_TERMINAL = "192.168.18.101"
+USUARIO = "admin"
+PASSWORD = "Eunacin0@27"
+URL_USER_SEARCH = f"http://{IP_TERMINAL}/ISAPI/AccessControl/UserInfo/Search?format=json"
+
+AUTH = HTTPDigestAuth(USUARIO, PASSWORD)
+HEADERS = {'Content-Type': 'application/json'}
+
+# --- Payload para la búsqueda ---
+# Le pedimos a la terminal todos los usuarios (máx 1000)
+SEARCH_PAYLOAD = {
+    "UserInfoSearchCond": {
+        "searchID": "fastapi_search_1",  # ID de búsqueda aleatorio
+        "searchResultPosition": 0,
+        "maxResults": 1000
+    }
+}
+
+
+@app.get("/api/users")
+async def get_hikvision_users():
+    """
+    Obtiene la lista de usuarios registrados en la terminal Hikvision
+    y la formatea para un CFormSelect.
+    """
+    try:
+        # Hacemos la petición POST a la terminal
+        response = requests.post(
+            URL_USER_SEARCH,
+            data=json.dumps(SEARCH_PAYLOAD),
+            auth=AUTH,
+            headers=HEADERS,
+            timeout=10  # Timeout de 10 segundos
+        )
+
+        # Si la terminal responde con error (401, 404, 500), lanza una excepción
+        response.raise_for_status()
+
+        data = response.json()
+
+        # --- Procesar la respuesta de Hikvision ---
+        if (data.get("UserInfoSearch") and
+            data["UserInfoSearch"].get("responseStatusStrg") == "OK" and
+                "UserInfo" in data["UserInfoSearch"]):
+
+            raw_user_list = data["UserInfoSearch"]["UserInfo"]
+            formatted_users = []
+
+            # Convertimos al formato { label, value }
+            for user in raw_user_list:
+                # Aseguramos que el usuario tenga nombre y ID
+                if "name" in user and "employeeNo" in user:
+                    formatted_users.append({
+                        "label": user["name"],
+                        "value": user["employeeNo"]  # ID de empleado
+                    })
+
+            # ¡Éxito! Devolvemos la lista formateada
+            return formatted_users
+
+        else:
+            # La terminal respondió OK pero no devolvió datos
+            raise HTTPException(
+                status_code=404,
+                detail=f"No se encontraron usuarios o la respuesta fue inesperada: {data}"
+            )
+
+    # --- Manejo de Errores ---
+    except requests.exceptions.HTTPError as errh:
+        # Error de autenticación (401) o endpoint no encontrado (404)
+        raise HTTPException(
+            status_code=errh.response.status_code,
+            detail=f"Error HTTP de la terminal: {errh.response.text}"
+        )
+    except requests.exceptions.ConnectionError:
+        # La terminal no es alcanzable (IP incorrecta, apagada, red)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Error de Conexión: No se pudo conectar a la terminal en {IP_TERMINAL}."
+        )
+    except requests.exceptions.Timeout:
+        # La terminal tardó demasiado en responder
+        raise HTTPException(
+            status_code=504,
+            detail="Error: Timeout. La terminal no respondió a tiempo."
+        )
+    except Exception as err:
+        # Cualquier otro error
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ocurrió un error interno en el servidor: {err}"
+        )
+
+
+def get_terminal_data(id, comienzo, fin):
+    url = "http://192.168.18.101/ISAPI/AccessControl/AcsEvent?format=json"
+    headers = {'Content-Type': 'application/json'}
+    auth = HTTPDigestAuth('admin', 'Eunacin0@27')
+
+    search_result_position = 0
+    all_events = []
+
+    while True:
+        payload = json.dumps({
+            "AcsEventCond": {
+                "searchID": "1",
+                "searchResultPosition": search_result_position,
+                "maxResults": 30,  # o 1000, pero la terminal puede tener límites
+                "major": 5,
+                "minor": 0,
+                "employeeNoString": id,
+                "startTime": comienzo,
+                "endTime": fin
+            }
+        })
+
+        response = requests.post(url, headers=headers,
+                                 data=payload, auth=auth, timeout=10)
+
+        if response.status_code != 200:
+            print(f"Error en API: {response.status_code} - {response.text}")
+            break
+
+        data = response.json()
+        acs_event = data.get("AcsEvent", {})
+        info_list = acs_event.get("InfoList", [])
+
+        for evento in info_list:
+            time_iso = evento.get("time")
+            if time_iso:
+                dt = datetime.fromisoformat(time_iso)
+                evento["time_formatted"] = dt.strftime("%H:%M")
+
+        all_events.extend(info_list)
+
+        total_matches = int(acs_event.get("totalMatches", 0))
+        num_of_matches = int(acs_event.get("numOfMatches", 0))
+
+        search_result_position += num_of_matches
+
+        # Si ya alcanzaste el total, sales del bucle
+        if search_result_position >= total_matches:
+            break
+
+    return all_events
+
+
+def agrupar_eventos_por_dia(eventos, año, mes):
+    # Construye dict: fecha → lista de horas
+    dias = defaultdict(list)
+
+    for evento in eventos:
+        time_iso = evento.get("time")
+        if time_iso:
+            dt = datetime.fromisoformat(time_iso)
+            fecha = dt.strftime("%Y-%m-%d")
+            hora = dt.strftime("%H:%M")
+            dias[fecha].append(hora)
+
+    # Ordena cada lista de horas
+    for fecha in dias:
+        dias[fecha].sort()
+
+    # Genera todas las fechas del mes
+    total_dias = calendar.monthrange(int(año), int(mes))[1]
+    fechas_del_mes = [
+        datetime(int(año), int(mes), dia).strftime("%Y-%m-%d")
+        for dia in range(1, total_dias + 1)
+    ]
+
+    # Construye lista final
+    agrupados = []
+    for fecha in fechas_del_mes:
+        horas = dias.get(fecha, [])
+        registro = {
+            "fecha": fecha,
+            "entrada": horas[0] if len(horas) >= 1 else "",
+            "almuerzo": horas[1] if len(horas) >= 2 else "",
+            "fin_almuerzo": horas[2] if len(horas) >= 3 else "",
+            "salida": horas[3] if len(horas) >= 4 else ""
+        }
+        agrupados.append(registro)
+
+    return agrupados
+
+
+def dias_habiles_en_mes(año, mes):
+    total_dias = calendar.monthrange(int(año), int(mes))[1]
+    dias_habiles = 0
+    for dia in range(1, total_dias + 1):
+        dia_semana = date(int(año), int(mes), dia).weekday()
+        if dia_semana < 5:  # Lunes=0, Viernes=4
+            dias_habiles += 1
+    return dias_habiles
+
+
+@app.post("/asistencia")
+async def generar_reporte_asistencia(data: api_model.AsistenciaRequest):
+    """
+    Recibe JSON, procesa y devuelve un archivo Excel.
+    """
+
+    id = data.userId
+    if not id:
+        raise HTTPException(
+            status_code=404, detail=f"ID de usuario '{data.userId}' no encontrado.")
+
+    mes_str = str(data.month).zfill(2)
+    año_str = str(data.year)
+
+    _, ultimo_dia = calendar.monthrange(data.year, data.month)
+
+    comienzo = f"{año_str}-{mes_str}-01T00:00:00-05:00"
+    fin = f"{año_str}-{mes_str}-{ultimo_dia}T23:59:59-05:00"
+
+    # 2. Ejecutar Lógica de Negocio
+    print(f"Generando reporte para {id}, {mes_str}/{año_str}...")
+    event_data = get_terminal_data(id, comienzo, fin)
+    eventos_agrupados = agrupar_eventos_por_dia(event_data, año_str, mes_str)
+    dias_habiles = dias_habiles_en_mes(año_str, mes_str)
+
+    # 3. Generar Excel (con manejo de errores)
+    output_dir = "docs"
+    os.makedirs(output_dir, exist_ok=True)  # Asegura que 'docs' exista
+    ruta_excel = get_resource_path(os.path.join("docs", "reporte.xlsm"))
+    ruta_salida = get_resource_path(os.path.join(
+        "docs", f"reporte_{id}_{año_str}_{mes_str}.xlsm"))
+
+    if not os.path.exists(ruta_excel):
+        raise HTTPException(
+            status_code=500, detail=f"No se encontró la plantilla 'reporte.xlsm' en la carpeta 'docs'")
+
+    app_xw = None
+    try:
+        app_xw = xw.App(visible=False)
+        wb = app_xw.books.open(ruta_excel)
+        ws = wb.sheets["Reporte de Asistencia"]
+
+        ws.range("F7").value = dias_habiles
+
+        fila_inicio = 19
+        for i, evento in enumerate(eventos_agrupados):
+            fila = fila_inicio + i
+            ws.range(f"C{fila}").value = evento["fecha"]
+            ws.range(f"D{fila}").value = evento["entrada"]
+            ws.range(f"E{fila}").value = evento["almuerzo"]
+            ws.range(f"F{fila}").value = evento["fin_almuerzo"]
+            ws.range(f"G{fila}").value = evento["salida"]
+            if evento["fecha"]:
+                dia_semana = datetime.strptime(
+                    evento["fecha"], "%Y-%m-%d").weekday()
+                if dia_semana in [0, 1, 2, 3, 4]:
+                    formula = '=IF([@ENTRADA]>G$7,F$10-E$10-[@ENTRADA],IF([@SALIDA]<F$10,[@SALIDA]-E$10-D$10,G$10))'
+                    ws.range(f"H{fila}").formula = formula
+                else:
+                    ws.range(f"H{fila}").value = ""
+            else:
+                ws.range(f"H{fila}").value = ""
+
+        wb.save(ruta_salida)
+
+    except Exception as e:
+        print(f"Error al escribir el Excel: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error al generar el archivo Excel: {e}")
+    finally:
+        # Asegurarse de que Excel se cierre siempre
+        if app_xw:
+            wb.close()
+            app_xw.quit()
+
+    # 4. Devolver el archivo
+    print(f"Reporte generado: {ruta_salida}")
+    return FileResponse(
+        path=ruta_salida,
+        filename=os.path.basename(ruta_salida),
+        media_type="application/vnd.ms-excel.sheet.macroEnabled.12",
+        headers={
+            "Content-Disposition": f'attachment; filename="{os.path.basename(ruta_salida)}"'}
+    )
+
+
 @app.get("/hello/{name}")
 def read_root(name: str):
     return f"hello {name}"
@@ -270,4 +553,5 @@ if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(uvicorn.run(app, host=HOST, port=PORT))
+    loop.run_until_complete(uvicorn.run(
+        app, host=HOST, port=PORT, log_level="debug"))

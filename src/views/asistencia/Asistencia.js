@@ -10,6 +10,7 @@ import {
   CRow,
   CCol,
 } from '@coreui/react'
+import axios from 'axios'
 
 const Asistencia = () => {
   const [users, setUsers] = useState([])
@@ -17,16 +18,27 @@ const Asistencia = () => {
   const [selectedMonth, setSelectedMonth] = useState('')
   const [selectedYear, setSelectedYear] = useState('')
   const [salary, setSalary] = useState('')
+  const [loading, setLoading] = useState(true) // Estado de carga
+  const [error, setError] = useState(null) // Estado de error
 
-  // Simula la carga de usuarios desde una API
   useEffect(() => {
-    // En un caso real, harías fetch('http://127.0.0.1:5000/api/usuarios')
-    const fetchedUsers = [
-      { label: 'Kimberly', value: '1' },
-      { label: 'Jorge', value: '2' },
-      { label: 'Brian', value: '3' },
-    ]
-    setUsers(fetchedUsers)
+    const fetchUsers = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const response = await axios.get('http://127.0.0.1:5000/api/users')
+
+        setUsers(response.data)
+      } catch (err) {
+        console.error('Error al cargar usuarios:', err)
+        setError('No se pudieron cargar los usuarios. Revisa la consola.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUsers()
   }, [])
 
   const months = [
@@ -63,6 +75,7 @@ const Asistencia = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+
     const formData = {
       userId: selectedUser,
       month: selectedMonth,
@@ -80,15 +93,36 @@ const Asistencia = () => {
       })
 
       if (!response.ok) {
-        throw new Error('Error al enviar los datos')
+        throw new Error('Error al generar el archivo Excel')
       }
 
-      const result = await response.json()
-      console.log('Respuesta de la API:', result)
-      alert('Datos enviados correctamente')
+      // Recibir el archivo como blob
+      const blob = await response.blob()
+
+      // Crear una URL temporal
+      const url = window.URL.createObjectURL(blob)
+
+      // Crear un enlace temporal para forzar la descarga
+      const a = document.createElement('a')
+      a.href = url
+
+      // Recuperar el nombre del archivo del encabezado Content-Disposition
+      const disposition = response.headers.get('Content-Disposition')
+      let filename = 'reporte.xlsm'
+      if (disposition && disposition.includes('filename=')) {
+        filename = disposition.split('filename=')[1].replace(/"/g, '')
+      }
+
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+
+      // Limpiar
+      a.remove()
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error:', error)
-      alert('Hubo un problema al enviar los datos.')
+      alert('Hubo un problema al generar el archivo.')
     }
   }
 
