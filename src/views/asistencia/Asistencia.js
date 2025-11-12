@@ -43,9 +43,23 @@ const Asistencia = () => {
     'Noviembre',
     'Diciembre',
   ]
-
+  const monthOptions = [
+    { label: 'Selecciona un mes', value: '' }, // Opción por defecto
+    ...months.map((monthName, index) => ({
+      label: monthName, // El texto que ve el usuario (ej. "Enero")
+      value: index + 1, // El valor interno (índice 0 + 1 = 1)
+    })),
+  ]
   const currentYear = new Date().getFullYear()
   const years = [currentYear, currentYear - 1]
+
+  const options = [
+    { label: 'Selecciona un año', value: '' },
+    ...years.map((year) => ({
+      label: String(year),
+      value: year,
+    })),
+  ]
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -100,7 +114,7 @@ const Asistencia = () => {
                   label="Mes"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  options={['Selecciona un mes', ...months]}
+                  options={monthOptions}
                 />
               </CCol>
               <CCol md={6}>
@@ -109,7 +123,7 @@ const Asistencia = () => {
                   label="Año"
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
-                  options={['Selecciona un año', ...years]}
+                  options={options}
                 />
               </CCol>
               <CCol md={6}>

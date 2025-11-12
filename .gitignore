@@ -15,7 +15,7 @@ yarn.lock
 __pycache__/
 build/
 dist/
-
+.venv/
 # misc
 .eslintcache
 .DS_Store
