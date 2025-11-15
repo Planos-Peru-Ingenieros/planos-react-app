@@ -148,35 +148,45 @@ def cotizaciones(data):
     Recibe un diccionario con los datos y retorna la ruta del archivo Excel generado.
     """
 
+    # --- 1. EXTRACCIÓN DE DATOS (NUEVO FORMATO) ---
+    
+    # Datos que ya usábamos (para nombre de archivo y plantilla)
     codigo = data.get('codigo')
-    nombre = data.get('usuario')
-    detalles = data.get('detalles', '')
+    usuario = data.get('usuario') # Para el nombre del archivo
+
+    # Datos del formulario (con los nombres nuevos del JSON)
+    detalles = data.get('titulo', '') # En el JSON se llama 'titulo'
     cliente = data.get('cliente')
     ubicacion = data.get('ubicacion')
     telefono = data.get('telefono')
     dni = data.get('dni')
     observaciones = data.get('observaciones') or ' '
-    pisos = data.get('piso')
-    area = data.get('area')
-    cuotas = data.get('cuotas', [])
-    fechas = data.get('fechas', [])
+    pisos = data.get('pisos')
+    area = data.get('area') # Ahora es un string (ej: "240 m2")
+    cuotas_objetos = data.get('cuotas', [])
 
-    # Verificar si el archivo de plantilla existe con el nombre del código
+    # --- CAMPOS NUEVOS (extraídos del JSON) ---
+    nombre_proyecto = data.get('nombre')
+    tipo_id = data.get('tipo')
+    elaboracion = data.get('elaboracion')
+    estado = data.get('estado')
+
+    # --- 2. APERTURA DE EXCEL ---
     ruta_original = get_resource_path(f'docs/{codigo}.xlsx')
     if not os.path.exists(ruta_original):
         raise FileNotFoundError(
-            f'El archivo con el código "{codigo}" no se encuentra')
+            f'El archivo con el código "{codigo}" no se encuentra. (Ruta: {ruta_original})')
 
-    # Iniciar Excel de forma oculta
     app_excel = xw.App(visible=False)
     wb = app_excel.books.open(ruta_original)
     hoja = wb.sheets[0]
 
-    # Limitar el tamaño de los detalles
+    # --- 3. LLENADO DE DATOS (Campos existentes) ---
+    
+    # Lógica de 'detalles' (partes)
     limites_detalles = [15, 100]
     partes = []
     texto_restante = detalles.strip()
-
     for limite in limites_detalles:
         if len(texto_restante) <= limite:
             partes.append(texto_restante)
@@ -197,14 +207,14 @@ def cotizaciones(data):
     celdas_detalles = ['G11', 'B12', 'B13']
     for i in range(min(3, len(partes))):
         hoja.range(celdas_detalles[i]).value = partes[i]
-
-    # Rellenar los datos del cliente y la ubicación
+        
+    # Llenar datos del cliente/proyecto
     hoja.range('B15').value = cliente
     hoja.range('G15').value = ubicacion
     hoja.range('G16').value = telefono
     hoja.range('B17').value = dni
     hoja.range('B14').value = pisos
-    hoja.range('D14').value = area
+    hoja.range('D14').value = area # Escribe el string "240 m2"
 
     # Llenar observaciones
     for i, linea in enumerate(observaciones.split('\n'), start=52):
@@ -212,23 +222,25 @@ def cotizaciones(data):
             break
         hoja.range(f'C{i}').value = linea
 
-    # Llenar cuotas
+    # Llenar cuotas y fechas
     celdas_cuotas = ['C61', 'C62', 'C63', 'C64']
-    for i, monto in enumerate(cuotas):
-        if i < len(celdas_cuotas):
-            hoja.range(celdas_cuotas[i]).value = monto
-
-    # Llenar fechas
     celdas_fechas = ['G61', 'G62', 'G63', 'G64']
-    for i, fecha in enumerate(fechas):
-        if i < len(celdas_fechas):
-            hoja.range(celdas_fechas[i]).value = fecha
+    
+    for i, cuota_obj in enumerate(cuotas_objetos):
+        if i >= len(celdas_cuotas):
+            break
+        monto = cuota_obj.get('monto')
+        fecha = cuota_obj.get('fecha')
+        hoja.range(celdas_cuotas[i]).value = monto
+        hoja.range(celdas_fechas[i]).value = fecha
 
-    # Crear nombre de archivo único
-    hoy = datetime.now()
+    # --- 4. LÓGICA DE GUARDADO ---
+    hoy = datetime.now() 
     anio = hoy.strftime("%Y")
     mes_dia = hoy.strftime("%m%d")
-    abreviado_usuario = (nombre[:3] if nombre else 'USR').upper()
+    
+    # Usamos la variable 'usuario' que viene del JSON
+    abreviado_usuario = (usuario[:3] if usuario else 'USR').upper()
 
     def limpiar(texto):
         return ''.join(c for c in texto if c.isalnum() or c in (' ', '-', '_')).replace(' ', '')
@@ -249,7 +261,6 @@ def cotizaciones(data):
     app_excel.quit()
 
     return ruta_salida
-
 
 IP_TERMINAL = "192.168.18.101"
 USUARIO = "admin"
