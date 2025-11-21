@@ -472,6 +472,7 @@ def dias_habiles_en_mes(año, mes):
 async def generar_reporte_asistencia(data: api_model.AsistenciaRequest):
     """
     Recibe JSON, procesa y devuelve un archivo Excel.
+    CORREGIDO: Usa carpeta temporal para guardar el archivo generado.
     """
 
     id = data.userId
@@ -489,25 +490,30 @@ async def generar_reporte_asistencia(data: api_model.AsistenciaRequest):
 
     # 2. Ejecutar Lógica de Negocio
     print(f"Generando reporte para {id}, {mes_str}/{año_str}...")
-    event_data = get_terminal_data(id, comienzo, fin)
+    try:
+        event_data = get_terminal_data(id, comienzo, fin)
+    except Exception as e:
+        print(f"Error conectando a terminal: {e}")
+        # Si falla la conexión, intentamos seguir (o podrías lanzar error)
+        event_data = []
+        
     eventos_agrupados = agrupar_eventos_por_dia(event_data, año_str, mes_str)
     dias_habiles = dias_habiles_en_mes(año_str, mes_str)
 
-    # 3. Generar Excel (con manejo de errores)
-    output_dir = "docs"
-    os.makedirs(output_dir, exist_ok=True)  # Asegura que 'docs' exista
-    ruta_excel = get_resource_path(os.path.join("docs", "reporte.xlsm"))
-    ruta_salida = get_resource_path(os.path.join(
-        "docs", f"reporte_{id}_{año_str}_{mes_str}.xlsm"))
+    # 3. Generar Excel
+    # IMPORTANTE: Solo usamos get_resource_path para LEER la plantilla, NO para guardar
+    ruta_plantilla = get_resource_path(os.path.join("docs", "reporte.xlsm"))
 
-    if not os.path.exists(ruta_excel):
+    if not os.path.exists(ruta_plantilla):
         raise HTTPException(
-            status_code=500, detail=f"No se encontró la plantilla 'reporte.xlsm' en la carpeta 'docs'")
+            status_code=500, detail=f"No se encontró la plantilla 'reporte.xlsm'. Ruta buscada: {ruta_plantilla}")
 
     app_xw = None
+    ruta_salida_temp = ""
+    
     try:
         app_xw = xw.App(visible=False)
-        wb = app_xw.books.open(ruta_excel)
+        wb = app_xw.books.open(ruta_plantilla)
         ws = wb.sheets["Reporte de Asistencia"]
 
         ws.range("F7").value = dias_habiles
@@ -520,40 +526,51 @@ async def generar_reporte_asistencia(data: api_model.AsistenciaRequest):
             ws.range(f"E{fila}").value = evento["almuerzo"]
             ws.range(f"F{fila}").value = evento["fin_almuerzo"]
             ws.range(f"G{fila}").value = evento["salida"]
+            
+            # Lógica de fórmula (Solo se pone si hay fecha válida)
             if evento["fecha"]:
-                dia_semana = datetime.strptime(
-                    evento["fecha"], "%Y-%m-%d").weekday()
-                if dia_semana in [0, 1, 2, 3, 4]:
+                dia_semana = datetime.strptime(evento["fecha"], "%Y-%m-%d").weekday()
+                if dia_semana < 5: # Lunes a Viernes
                     formula = '=IF([@ENTRADA]>G$7,F$10-E$10-[@ENTRADA],IF([@SALIDA]<F$10,[@SALIDA]-E$10-D$10,G$10))'
+                    # A veces xlwings requiere fórmulas en inglés, asegurate que tu Excel lo soporte.
                     ws.range(f"H{fila}").formula = formula
                 else:
                     ws.range(f"H{fila}").value = ""
             else:
                 ws.range(f"H{fila}").value = ""
 
-        wb.save(ruta_salida)
+        # --- GUARDADO CORREGIDO ---
+        # Creamos un archivo temporal seguro en Windows
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsm") as tmp:
+            ruta_salida_temp = tmp.name
+        
+        wb.save(ruta_salida_temp)
 
     except Exception as e:
-        print(f"Error al escribir el Excel: {e}")
+        print(traceback.format_exc())
         raise HTTPException(
-            status_code=500, detail=f"Error al generar el archivo Excel: {e}")
+            status_code=500, detail=f"Error al generar el Excel: {str(e)}")
+            
     finally:
-        # Asegurarse de que Excel se cierre siempre
+        # Cerrar Excel limpiamente
         if app_xw:
-            wb.close()
-            app_xw.quit()
+            try:
+                wb.close()
+                app_xw.quit()
+            except:
+                pass
 
     # 4. Devolver el archivo
-    print(f"Reporte generado: {ruta_salida}")
+    # Definimos el nombre bonito aquí para la descarga
+    nombre_bonito = f"reporte_{id}_{año_str}_{mes_str}.xlsm"
+    
     return FileResponse(
-        path=ruta_salida,
-        filename=os.path.basename(ruta_salida),
+        path=ruta_salida_temp,
+        filename=nombre_bonito,
         media_type="application/vnd.ms-excel.sheet.macroEnabled.12",
-        headers={
-            "Content-Disposition": f'attachment; filename="{os.path.basename(ruta_salida)}"'}
+        headers={"Content-Disposition": f'attachment; filename="{nombre_bonito}"'}
     )
-
-
+    
 @app.get("/hello/{name}")
 def read_root(name: str):
     return f"hello {name}"
