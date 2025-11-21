@@ -149,20 +149,20 @@ def cotizaciones(data):
     """
 
     # --- 1. EXTRACCIÓN DE DATOS (NUEVO FORMATO) ---
-    
+
     # Datos que ya usábamos (para nombre de archivo y plantilla)
     codigo = data.get('codigo')
-    usuario = data.get('usuario') # Para el nombre del archivo
+    usuario = data.get('usuario')  # Para el nombre del archivo
 
     # Datos del formulario (con los nombres nuevos del JSON)
-    detalles = data.get('titulo', '') # En el JSON se llama 'titulo'
+    detalles = data.get('titulo', '')  # En el JSON se llama 'titulo'
     cliente = data.get('cliente')
     ubicacion = data.get('ubicacion')
     telefono = data.get('telefono')
     dni = data.get('dni')
     observaciones = data.get('observaciones') or ' '
     pisos = data.get('pisos')
-    area = data.get('area') # Ahora es un string (ej: "240 m2")
+    area = data.get('area')  # Ahora es un string (ej: "240 m2")
     cuotas_objetos = data.get('cuotas', [])
 
     # --- CAMPOS NUEVOS (extraídos del JSON) ---
@@ -182,7 +182,43 @@ def cotizaciones(data):
     hoja = wb.sheets[0]
 
     # --- 3. LLENADO DE DATOS (Campos existentes) ---
-    
+
+    # Llenar datos del cliente/proyecto
+    hoja.range('B15').value = cliente
+    hoja.range('G15').value = ubicacion
+    hoja.range('G16').value = telefono
+    hoja.range('B17').value = dni
+    hoja.range('B14').value = pisos
+    hoja.range('D14').value = area  # Escribe el string "240 m2"
+
+    # Llenar observaciones
+    for i, linea in enumerate(observaciones.split('\n'), start=52):
+        if i > 54:
+            break
+        hoja.range(f'C{i}').value = linea
+
+    # Llenar cuotas y fechas
+    celdas_cuotas = ['C61', 'C62', 'C63', 'C64']
+    celdas_fechas = ['G61', 'G62', 'G63', 'G64']
+
+    for i, cuota_obj in enumerate(cuotas_objetos):
+        if i >= len(celdas_cuotas):
+            break
+        monto = cuota_obj.get('monto')
+        fecha = cuota_obj.get('fecha')
+        hoja.range(celdas_cuotas[i]).value = monto
+        hoja.range(celdas_fechas[i]).value = fecha
+
+    # --- 4. LÓGICA DE GUARDADO ---
+    hoy = datetime.now()
+    anio = hoy.strftime("%Y")
+    mes_dia = hoy.strftime("%m%d")
+
+    # Usamos la variable 'usuario' que viene del JSON
+    abreviado_usuario = (usuario[:3] if usuario else 'USR').upper()
+    hoja.range(
+        'E19').value = f"CZ-{anio}-{mes_dia}-{abreviado_usuario}-{codigo}"
+
     # Lógica de 'detalles' (partes)
     limites_detalles = [15, 100]
     partes = []
@@ -207,40 +243,6 @@ def cotizaciones(data):
     celdas_detalles = ['G11', 'B12', 'B13']
     for i in range(min(3, len(partes))):
         hoja.range(celdas_detalles[i]).value = partes[i]
-        
-    # Llenar datos del cliente/proyecto
-    hoja.range('B15').value = cliente
-    hoja.range('G15').value = ubicacion
-    hoja.range('G16').value = telefono
-    hoja.range('B17').value = dni
-    hoja.range('B14').value = pisos
-    hoja.range('D14').value = area # Escribe el string "240 m2"
-
-    # Llenar observaciones
-    for i, linea in enumerate(observaciones.split('\n'), start=52):
-        if i > 54:
-            break
-        hoja.range(f'C{i}').value = linea
-
-    # Llenar cuotas y fechas
-    celdas_cuotas = ['C61', 'C62', 'C63', 'C64']
-    celdas_fechas = ['G61', 'G62', 'G63', 'G64']
-    
-    for i, cuota_obj in enumerate(cuotas_objetos):
-        if i >= len(celdas_cuotas):
-            break
-        monto = cuota_obj.get('monto')
-        fecha = cuota_obj.get('fecha')
-        hoja.range(celdas_cuotas[i]).value = monto
-        hoja.range(celdas_fechas[i]).value = fecha
-
-    # --- 4. LÓGICA DE GUARDADO ---
-    hoy = datetime.now() 
-    anio = hoy.strftime("%Y")
-    mes_dia = hoy.strftime("%m%d")
-    
-    # Usamos la variable 'usuario' que viene del JSON
-    abreviado_usuario = (usuario[:3] if usuario else 'USR').upper()
 
     def limpiar(texto):
         return ''.join(c for c in texto if c.isalnum() or c in (' ', '-', '_')).replace(' ', '')
@@ -249,8 +251,6 @@ def cotizaciones(data):
     ubicacion_limpia = limpiar(ubicacion or 'Ubicacion')
 
     nombre_archivo = f"CZ-{anio}-{mes_dia}-{abreviado_usuario}-{codigo}-{cliente_limpio}-{ubicacion_limpia}.xlsx"
-    hoja.range(
-        'E19').value = f"CZ-{anio}-{mes_dia}-{abreviado_usuario}-{codigo}"
 
     # Crear archivo temporal Excel
     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
@@ -261,6 +261,7 @@ def cotizaciones(data):
     app_excel.quit()
 
     return ruta_salida
+
 
 IP_TERMINAL = "192.168.18.101"
 USUARIO = "admin"
