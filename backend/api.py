@@ -14,6 +14,8 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import xlwings as xw
 import api_model
+import textwrap
+
 
 HOST = "127.0.0.1"
 PORT = 5000
@@ -144,124 +146,131 @@ async def crear_cotizacion_jpg(request: Request):
 
 def cotizaciones(data):
     """
-    Edita el xlsx de cotizaciones a partir de un JSON.
-    Recibe un diccionario con los datos y retorna la ruta del archivo Excel generado.
+    Edita el xlsx de cotizaciones.
+    CORREGIDO: Ajuste de ancho de texto y método de inserción de filas.
     """
 
-    # --- 1. EXTRACCIÓN DE DATOS (NUEVO FORMATO) ---
-
-    # Datos que ya usábamos (para nombre de archivo y plantilla)
+    # --- 1. EXTRACCIÓN DE DATOS ---
     codigo = data.get('codigo')
-    usuario = data.get('usuario')  # Para el nombre del archivo
-
-    # Datos del formulario (con los nombres nuevos del JSON)
-    detalles = data.get('titulo', '')  # En el JSON se llama 'titulo'
+    usuario = data.get('usuario')
+    
+    texto_completo = data.get('titulo', '') 
     cliente = data.get('cliente')
     ubicacion = data.get('ubicacion')
     telefono = data.get('telefono')
     dni = data.get('dni')
     observaciones = data.get('observaciones') or ' '
     pisos = data.get('pisos')
-    area = data.get('area')  # Ahora es un string (ej: "240 m2")
+    area = data.get('area')
     cuotas_objetos = data.get('cuotas', [])
-
-    # --- CAMPOS NUEVOS (extraídos del JSON) ---
-    nombre_proyecto = data.get('nombre')
-    tipo_id = data.get('tipo')
-    elaboracion = data.get('elaboracion')
-    estado = data.get('estado')
 
     # --- 2. APERTURA DE EXCEL ---
     ruta_original = get_resource_path(f'docs/{codigo}.xlsx')
     if not os.path.exists(ruta_original):
-        raise FileNotFoundError(
-            f'El archivo con el código "{codigo}" no se encuentra. (Ruta: {ruta_original})')
+        raise FileNotFoundError(f'El archivo no existe: {ruta_original}')
 
     app_excel = xw.App(visible=False)
     wb = app_excel.books.open(ruta_original)
     hoja = wb.sheets[0]
 
-    # --- 3. LLENADO DE DATOS (Campos existentes) ---
+    # --- 3. LÓGICA DE TEXTO ---
+    
+    # Cabecera pequeña para G11
+    texto_cabecera = ""
+    texto_cuerpo = texto_completo
+    
+    if len(texto_completo) > 0:
+        corte = 25
+        if len(texto_completo) > corte:
+            espacio = texto_completo.find(' ', 15)
+            if espacio != -1 and espacio < 40:
+                corte = espacio
+        texto_cabecera = texto_completo[:corte]
+        texto_cuerpo = texto_completo[corte:].strip()
 
-    # Llenar datos del cliente/proyecto
-    hoja.range('B15').value = cliente
-    hoja.range('G15').value = ubicacion
-    hoja.range('G16').value = telefono
-    hoja.range('B17').value = dni
-    hoja.range('B14').value = pisos
-    hoja.range('D14').value = area  # Escribe el string "240 m2"
+    hoja.range('G11').value = texto_cabecera
 
-    # Llenar observaciones
-    for i, linea in enumerate(observaciones.split('\n'), start=52):
-        if i > 54:
-            break
-        hoja.range(f'C{i}').value = linea
+    # AJUSTE CRÍTICO: Bajamos el width a 115 para que detecte mejor cuándo bajar de linea
+    lineas = textwrap.wrap(texto_cuerpo, width=115)
+    if not lineas: lineas = [""]
 
-    # Llenar cuotas y fechas
-    celdas_cuotas = ['C61', 'C62', 'C63', 'C64']
-    celdas_fechas = ['G61', 'G62', 'G63', 'G64']
+    # Filas disponibles originales (12 y 13)
+    filas_base = 2 
+    filas_necesarias = len(lineas)
+    filas_extra = 0
 
-    for i, cuota_obj in enumerate(cuotas_objetos):
-        if i >= len(celdas_cuotas):
-            break
-        monto = cuota_obj.get('monto')
-        fecha = cuota_obj.get('fecha')
-        hoja.range(celdas_cuotas[i]).value = monto
-        hoja.range(celdas_fechas[i]).value = fecha
+    # --- 4. INSERCIÓN DE FILAS (Lógica Robusta) ---
+    if filas_necesarias > filas_base:
+        filas_extra = filas_necesarias - filas_base
+        
+        # Insertamos filas una por una siempre en la posición 14
+        # Al insertar en la 14, la antigua 14 baja a la 15, etc.
+        for _ in range(filas_extra):
+            # 1. Insertar fila vacía empujando hacia abajo
+            hoja.range('14:14').api.Insert()
+            
+            # 2. Copiar el formato (azul y puntitos) de la fila superior (la 13)
+            hoja.range('B13:G13').api.Copy()
+            hoja.range('B14:G14').api.PasteSpecial(Paste=-4122) # Solo formatos
+            
+            # 3. Importante: Borrar cualquier valor que se haya copiado por error
+            hoja.range('B14:G14').value = ""
 
-    # --- 4. LÓGICA DE GUARDADO ---
+    # --- 5. ESCRIBIR TEXTO ---
+    fila_inicial = 12
+    for i, linea in enumerate(lineas):
+        fila_actual = fila_inicial + i
+        rango_celdas = f'B{fila_actual}:G{fila_actual}'
+        
+        hoja.range(f'B{fila_actual}').value = linea
+        
+        try:
+            hoja.range(rango_celdas).merge() 
+            hoja.range(rango_celdas).api.HorizontalAlignment = -4131 # Izquierda
+            hoja.range(rango_celdas).api.VerticalAlignment = -4108 # Centro
+            hoja.range(f'B{fila_actual}').api.WrapText = True # Ajustar texto
+        except:
+            pass
+
+    # --- 6. LLENADO DE DATOS INFERIORES (CON OFFSET) ---
+    # Todo lo de abajo se movió 'filas_extra' espacios
+    off = filas_extra
+
+    hoja.range(f'B{14 + off}').value = pisos
+    hoja.range(f'D{14 + off}').value = area 
+    hoja.range(f'B{15 + off}').value = cliente
+    hoja.range(f'G{15 + off}').value = ubicacion
+    hoja.range(f'G{16 + off}').value = telefono
+    hoja.range(f'B{17 + off}').value = dni
+    
     hoy = datetime.now()
     anio = hoy.strftime("%Y")
     mes_dia = hoy.strftime("%m%d")
+    abreviado = (usuario[:3] if usuario else 'USR').upper()
+    hoja.range(f'E{19 + off}').value = f"CZ-{anio}-{mes_dia}-{abreviado}-{codigo}"
 
-    # Usamos la variable 'usuario' que viene del JSON
-    abreviado_usuario = (usuario[:3] if usuario else 'USR').upper()
-    hoja.range(
-        'E19').value = f"CZ-{anio}-{mes_dia}-{abreviado_usuario}-{codigo}"
+    # Observaciones
+    fila_obs = 52 + off
+    for i, linea in enumerate(observaciones.split('\n')):
+        if i > 5: break
+        hoja.range(f'C{fila_obs + i}').value = linea
 
-    # Lógica de 'detalles' (partes)
-    limites_detalles = [15, 100]
-    partes = []
-    texto_restante = detalles.strip()
-    for limite in limites_detalles:
-        if len(texto_restante) <= limite:
-            partes.append(texto_restante)
-            texto_restante = ''
-        else:
-            corte = texto_restante[:limite]
-            espacio = corte.rfind(' ')
-            if espacio != -1:
-                partes.append(texto_restante[:espacio].strip())
-                texto_restante = texto_restante[espacio + 1:].strip()
-            else:
-                partes.append(corte.strip())
-                texto_restante = texto_restante[limite:].strip()
-    if texto_restante:
-        partes.append(texto_restante)
+    # Cuotas
+    fila_cuota = 61 + off
+    for i, cuota in enumerate(cuotas_objetos):
+        if i >= 4: break
+        hoja.range(f'C{fila_cuota + i}').value = cuota.get('monto')
+        hoja.range(f'G{fila_cuota + i}').value = cuota.get('fecha')
 
-    # Llenar las celdas de detalles
-    celdas_detalles = ['G11', 'B12', 'B13']
-    for i in range(min(3, len(partes))):
-        hoja.range(celdas_detalles[i]).value = partes[i]
-
-    def limpiar(texto):
-        return ''.join(c for c in texto if c.isalnum() or c in (' ', '-', '_')).replace(' ', '')
-
-    cliente_limpio = limpiar(cliente or 'Cliente')
-    ubicacion_limpia = limpiar(ubicacion or 'Ubicacion')
-
-    nombre_archivo = f"CZ-{anio}-{mes_dia}-{abreviado_usuario}-{codigo}-{cliente_limpio}-{ubicacion_limpia}.xlsx"
-
-    # Crear archivo temporal Excel
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
-        ruta_salida = temp_file.name
+    # --- 7. GUARDADO ---
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+        ruta_salida = tmp.name
 
     wb.save(ruta_salida)
     wb.close()
     app_excel.quit()
 
     return ruta_salida
-
 
 IP_TERMINAL = "192.168.18.101"
 USUARIO = "admin"

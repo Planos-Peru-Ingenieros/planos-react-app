@@ -72,7 +72,7 @@ coreui-free-react-admin-template
 - PROBAR LOCALMENTE (ABRE EL APP del BACKEND)
 
 1. npm run build
-2. npm run electron
+2. npm run electron-dev
 
 - PROBAR LOCALMENTE CON MODIFICACIONES COMO AÑADIR DOCUMENTOS EXCEL ENTRE OTROS (ABRE EL APP del BACKEND O SI DESEAS EJECUTA LA APLICACION EN GENERAL)
 
@@ -95,6 +95,6 @@ python -m PyInstaller --onefile app.py
 
 ## Creadores
 
-**Kimberly**
-
 **Jorge**
+
+**Toni**
