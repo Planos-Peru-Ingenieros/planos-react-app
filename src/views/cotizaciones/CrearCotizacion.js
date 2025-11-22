@@ -215,44 +215,79 @@ export default function CrearCotizacion() {
     }
   }
 
-  // 11. Handlers para generar los archivos (SIN CAMBIOS)
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    const datos = construirDatosParaBackend()
+  // 11. Handlers para generar los archivos y GUARDAR EN BD
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const datos = construirDatosParaBackend()
 
-    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datos),
-    })
+    // ---------------------------------------------------------
+    // PASO 1: GUARDAR EN LA BASE DE DATOS (DJANGO - Puerto 8000)
+    // ---------------------------------------------------------
+    try {
+        // Agregamos el 'precio' al objeto porque tu serializer de Django lo espera
+        const datosParaDjango = { 
+            ...datos, 
+            precio: montoTotal 
+        }
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      alert(`Error al generar la cotización: ${errorText}`)
-      return
+        const responseBD = await fetch('http://127.0.0.1:8000/api/guardar-cotizacion/', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                // Si activaste el login en Django, descomenta la siguiente línea:
+                // 'Authorization': `Token ${localStorage.getItem('token')}` 
+            },
+            body: JSON.stringify(datosParaDjango),
+        })
+
+        if (responseBD.ok) {
+            console.log("✅ Cotización guardada exitosamente en la Base de Datos.")
+        } else {
+            const errorBD = await responseBD.text()
+            console.error("❌ Error al guardar en BD:", errorBD)
+            alert("Advertencia: No se pudo guardar en la Base de Datos, pero se intentará generar el Excel.")
+        }
+    } catch (error) {
+        console.error("❌ Error de conexión con Django:", error)
+        alert("Error: No se pudo conectar con el servidor de Base de Datos (Puerto 8000).")
     }
 
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
+    // ---------------------------------------------------------
+    // PASO 2: GENERAR EL EXCEL (ELECTRON - Puerto 5000)
+    // ---------------------------------------------------------
+    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    })
 
-    const hoy = new Date()
-    const anio = hoy.getFullYear()
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
-    const dia = String(hoy.getDate()).padStart(2, '0')
-    const mes_dia = `${mes}${dia}`
-    const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
-    const limpiar = (texto) =>
-      texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
-    const cliente_limpio = limpiar(datos.cliente || 'Cliente')
-    const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
+    if (!response.ok) {
+      const errorText = await response.text()
+      alert(`Error al generar el Excel: ${errorText}`)
+      return
+    }
 
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.xlsx`
-    a.click()
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
 
-    setShowModal(true)
-  }
+    const hoy = new Date()
+    const anio = hoy.getFullYear()
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+    const dia = String(hoy.getDate()).padStart(2, '0')
+    const mes_dia = `${mes}${dia}`
+    const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
+    const limpiar = (texto) =>
+      texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+    const cliente_limpio = limpiar(datos.cliente || 'Cliente')
+    const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.xlsx`
+    a.click()
+
+    setShowModal(true)
+  }
 
   const handleGeneratePDF = async () => {
     const datos = construirDatosParaBackend() 
