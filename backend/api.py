@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import calendar
 from datetime import datetime, date
@@ -14,6 +15,11 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import xlwings as xw
 import api_model
+
+# --- IMPORTACIONES NUEVAS PARA EL ROBOT ---
+import threading 
+from sunarp_scraper import consultar_estado_sunarp 
+# ------------------------------------------
 
 HOST = "127.0.0.1"
 PORT = 5000
@@ -37,6 +43,10 @@ def get_resource_path(relative_path):
         base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
 
+
+# ==============================================================================
+#  RUTAS DE COTIZACIONES
+# ==============================================================================
 
 @app.post("/crear-cotizacion")
 async def crear_cotizacion(request: Request):
@@ -261,6 +271,10 @@ def cotizaciones(data):
     app_excel.quit()
 
     return ruta_salida
+
+# ==============================================================================
+#  RUTAS DE ASISTENCIA (HIKVISION)
+# ==============================================================================
 
 IP_TERMINAL = "192.168.18.101"
 USUARIO = "admin"
@@ -556,6 +570,124 @@ def open_explorer(model: api_model.PathModel):
 
     return f"Opening {model.path}"
 
+# ==============================================================================
+#  LÓGICA DEL ROBOT EN SEGUNDO PLANO (INTEGRADO EN FASTAPI)
+# ==============================================================================
+
+# URL DE TU SERVIDOR DJANGO (Donde están los expedientes)
+URL_DJANGO_CPANEL = "http://127.0.0.1:8000"  # <--- AJUSTA ESTO A TU DOMINIO REAL SI USAS CPANEL
+
+# Variables de control
+robot_activo = False
+hilo_robot = None
+
+def proceso_robot_background():
+    """
+    Esta función corre en paralelo. Revisa pendientes y ejecuta el scraper.
+    """
+    global robot_activo
+    print("🤖 Robot iniciado en segundo plano...")
+    
+    while robot_activo:
+        try:
+            # 1. PEDIR TRABAJO A DJANGO
+            # Asegúrate que la URL coincida con tus rutas de Django
+            url_pendientes = f"{URL_DJANGO_CPANEL}/api/robot/pendientes/"
+            
+            try:
+                resp = requests.get(url_pendientes, timeout=10)
+            except Exception as e:
+                print(f"⚠️ Error conectando con Django: {e}")
+                time.sleep(10)
+                continue
+
+            if resp.status_code == 200:
+                data = resp.json()
+                tareas = data.get("tareas", [])
+                
+                if not tareas:
+                    print("💤 Nada pendiente. Esperando...")
+                    # Espera con chequeo de apagado
+                    for _ in range(30): 
+                        if not robot_activo: break
+                        time.sleep(1)
+                    continue
+
+                # 2. PROCESAR TAREAS
+                for tarea in tareas:
+                    if not robot_activo: break # Apagado de emergencia
+
+                    titulo = tarea['titulo']
+                    anio = tarea['anio']
+                    oficina = tarea['oficina']
+                    id_exp = tarea['id']
+
+                    print(f"🚀 Procesando: {titulo} - {anio}")
+                    
+                    # --- EJECUTAR SCRAPER (Se abrirá ventana) ---
+                    nuevo_estado = consultar_estado_sunarp(anio, titulo, oficina)
+                    # --------------------------------------------
+
+                    if nuevo_estado and "Error" not in nuevo_estado:
+                        # 3. ENVIAR A DJANGO
+                        url_guardar = f"{URL_DJANGO_CPANEL}/api/robot/guardar/"
+                        try:
+                            requests.post(url_guardar, json={
+                                "id": id_exp,
+                                "estado": nuevo_estado
+                            })
+                            print(f"   ✅ Guardado: {nuevo_estado}")
+                        except:
+                            print("   ❌ Error enviando resultado")
+                    
+                    time.sleep(5) # Descanso entre consultas
+
+            else:
+                print(f"Error API Django: {resp.status_code}")
+                time.sleep(10)
+
+        except Exception as e:
+            print(f"Error en bucle robot: {e}")
+            time.sleep(10)
+    
+    print("🛑 Robot detenido.")
+
+# ==============================================================================
+#  ENDPOINTS DE CONTROL DEL ROBOT
+# ==============================================================================
+
+@app.post("/api/robot/start")
+async def start_robot():
+    global robot_activo, hilo_robot
+    
+    if not robot_activo:
+        robot_activo = True
+        # Creamos el hilo y lo iniciamos
+        hilo_robot = threading.Thread(target=proceso_robot_background)
+        hilo_robot.daemon = True # Se cierra si cierras la app principal
+        hilo_robot.start()
+        return {"status": "started", "message": "Robot iniciado correctamente"}
+    else:
+        return {"status": "running", "message": "El robot ya está corriendo"}
+
+@app.post("/api/robot/stop")
+async def stop_robot():
+    global robot_activo
+    if robot_activo:
+        robot_activo = False
+        return {"status": "stopping", "message": "Deteniendo robot (espere a que termine la tarea actual)..."}
+    else:
+        return {"status": "stopped", "message": "El robot ya estaba detenido"}
+
+@app.get("/api/robot/status")
+async def status_robot():
+    """Devuelve si el robot está prendido o apagado"""
+    return {"active": robot_activo}
+
+
+# ==============================================================================
+#  ARRANQUE DEL SERVIDOR
+# ==============================================================================
 
 if __name__ == "__main__":
     import asyncio

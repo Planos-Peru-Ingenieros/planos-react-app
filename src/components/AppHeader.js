@@ -28,6 +28,9 @@ import {
 import { AppBreadcrumb } from './index'
 import { AppHeaderDropdown } from './header/index'
 
+// --- IMPORTAR EL BOTÓN ---
+import BotonRobot from './BotonRobot'
+
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
@@ -54,10 +57,20 @@ const AppHeader = () => {
         >
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
+        
         <CHeaderNav>
+          
+          {/* --- AQUÍ ESTÁ EL BOTÓN DEL ROBOT --- */}
+          <CNavItem className="d-flex align-items-center me-3">
+             <BotonRobot />
+          </CNavItem>
+          {/* ---------------------------------- */}
+
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
+          
+          {/* Selector de Tema */}
           <CDropdown variant="nav-item" placement="bottom-end">
             <CDropdownToggle caret={false}>
               {colorMode === 'dark' ? (
@@ -98,6 +111,7 @@ const AppHeader = () => {
               </CDropdownItem>
             </CDropdownMenu>
           </CDropdown>
+          
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
