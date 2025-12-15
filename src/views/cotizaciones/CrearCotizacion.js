@@ -220,7 +220,7 @@ export default function CrearCotizacion() {
     e.preventDefault()
     const datos = construirDatosParaBackend()
 
-    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion', {
+    const response = await fetch('http://127.0.0.1:8000/crear-cotizacion', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(datos),
@@ -258,7 +258,7 @@ export default function CrearCotizacion() {
     const datos = construirDatosParaBackend() 
 
     const response = await fetch(
-      'http://127.0.0.1:5000/crear-cotizacion-pdf',
+      'http://127.0.0.1:8000/crear-cotizacion-pdf',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -298,7 +298,7 @@ export default function CrearCotizacion() {
     const datos = construirDatosParaBackend() 
 
     const response = await fetch(
-      'http://127.0.0.1:5000/crear-cotizacion-jpg',
+      'http://127.0.0.1:8000/crear-cotizacion-jpg',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

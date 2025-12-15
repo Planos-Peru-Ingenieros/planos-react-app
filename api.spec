@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['backend\\api.py'],
+a = Analysis(['backend\\main.py'],
              pathex=[],
              binaries=[],
              datas=[('public\\favicon.ico','.'),('backend\\docs', 'docs')],

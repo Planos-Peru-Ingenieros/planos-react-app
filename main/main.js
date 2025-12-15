@@ -6,12 +6,12 @@ const isDev = require('electron-is-dev')
 const execFile = require('child_process').execFile
 
 const API_PROD_PATH = path.join(process.resourcesPath, '../lib/api/api.exe')
-const API_DEV_PATH = path.join(__dirname, '../backend/api.py')
+const API_DEV_PATH = path.join(__dirname, '../backend/main.py')
 const INDEX_PATH = path.join(__dirname, '../build/index.html')
 const app_instance = app.requestSingleInstanceLock()
 
 // check if current app is Production or Development using electron-is-dev library
-// current app is not production, just run the API from api.py,else run the api from API_PROD_PATH
+// current app is not production, just run the API from main.py,else run the api from API_PROD_PATH
 if (isDev) {
   try {
     require('electron-reloader')(module)

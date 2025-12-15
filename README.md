@@ -88,6 +88,12 @@ coreui-free-react-admin-template
 4. export GH_TOKEN=
 5. npx electron-builder --publish always (DEBE DECIR 100% PARA PODER VER LA NUEVA VERSION)
 
+
+- INICIAR EL PROYECTO
+
+FROND:npm run electron-dev
+BACK:uvicorn backend.main:app --reload
+
 ---- PARA FLASK -----
 pip show pyinstaller
 pip install pyinstaller
