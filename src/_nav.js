@@ -1,6 +1,6 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilSpeedometer } from '@coreui/icons'
+import { cilPencil, cilSpeedometer, cilFile } from '@coreui/icons' // <--- DEBES IMPORTAR EL ÍCONO cilFile
 import { CNavItem, CNavTitle } from '@coreui/react'
 
 const _nav = [
@@ -25,6 +25,13 @@ const _nav = [
     name: 'Asistencia',
     to: '/asistencia',
     icon: <CIcon icon={cilPencil} customClassName="nav-icon" />,
+  },
+  // La entrada que agregaste
+  {
+    component: CNavItem,
+    name: 'Formulario Registral',
+    to: '/formularios/registral',
+    icon: <CIcon icon={cilFile} customClassName="nav-icon" />, // Aquí usamos el icono importado
   },
 ]
 
