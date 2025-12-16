@@ -2,7 +2,7 @@ import json
 import calendar
 import requests
 import os
-import time  # <--- IMPORTANTE: Agregado para la pausa de seguridad
+import time
 from datetime import datetime, date
 from collections import defaultdict
 from fastapi import HTTPException
@@ -37,7 +37,7 @@ def obtener_usuarios_terminal():
                     })
             return formatted_users
         else:
-            raise HTTPException(status_code=404, detail="No se encontraron usuarios o respuesta inesperada.")
+            raise HTTPException(status_code=404, detail="No se encontraron usuarios.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -67,25 +67,24 @@ def obtener_eventos_raw(id_empleado, inicio, fin):
             acs_event = data.get("AcsEvent", {})
             info_list = acs_event.get("InfoList", [])
             
-            for evento in info_list:
-                time_iso = evento.get("time")
-                if time_iso:
-                    dt = datetime.fromisoformat(time_iso)
-                    evento["time_formatted"] = dt.strftime("%H:%M")
-            
             all_events.extend(info_list)
             
             total_matches = int(acs_event.get("totalMatches", 0))
             num_of_matches = int(acs_event.get("numOfMatches", 0))
             search_result_position += num_of_matches
             
-            if search_result_position >= total_matches: break
+            if search_result_position >= total_matches or num_of_matches == 0: break
         except Exception:
             break
             
     return all_events
 
 def procesar_reporte_excel(user_id, year, month):
+    # --- CORRECCIÓN DE TIPOS: Forzar a entero para cálculos ---
+    year = int(year)
+    month = int(month)
+    user_id = str(user_id)
+
     # 1. Preparar fechas
     mes_str = str(month).zfill(2)
     año_str = str(year)
@@ -96,18 +95,19 @@ def procesar_reporte_excel(user_id, year, month):
     # 2. Obtener datos
     raw_events = obtener_eventos_raw(user_id, comienzo, fin)
     
-    # 3. Agrupar (Lógica interna)
+    # 3. Agrupar
     dias = defaultdict(list)
     for evento in raw_events:
-        dt = datetime.fromisoformat(evento.get("time"))
-        fecha = dt.strftime("%Y-%m-%d")
-        hora = dt.strftime("%H:%M")
-        dias[fecha].append(hora)
+        time_val = evento.get("time")
+        if time_val:
+            dt = datetime.fromisoformat(time_val)
+            fecha = dt.strftime("%Y-%m-%d")
+            hora = dt.strftime("%H:%M")
+            dias[fecha].append(hora)
     
     for fecha in dias: dias[fecha].sort()
 
-    total_dias_mes = calendar.monthrange(year, month)[1]
-    fechas_del_mes = [datetime(year, month, dia).strftime("%Y-%m-%d") for dia in range(1, total_dias_mes + 1)]
+    fechas_del_mes = [datetime(year, month, dia).strftime("%Y-%m-%d") for dia in range(1, ultimo_dia + 1)]
     
     agrupados = []
     for fecha in fechas_del_mes:
@@ -120,21 +120,19 @@ def procesar_reporte_excel(user_id, year, month):
             "salida": horas[3] if len(horas) >= 4 else ""
         })
 
-    # 4. Calcular días hábiles
-    dias_habiles = sum(1 for dia in range(1, total_dias_mes + 1) if date(year, month, dia).weekday() < 5)
+    # 4. Calcular días hábiles (Lunes a Viernes)
+    dias_habiles = sum(1 for dia in range(1, ultimo_dia + 1) if date(year, month, dia).weekday() < 5)
 
     # 5. Generar Excel
-    output_dir = "docs"
-    os.makedirs(output_dir, exist_ok=True)
     ruta_plantilla = get_resource_path(os.path.join("docs", "reporte.xlsm"))
-    ruta_salida = get_resource_path(os.path.join("docs", f"reporte_{user_id}_{año_str}_{mes_str}.xlsm"))
+    # Usamos la carpeta temp de Windows para evitar errores de permisos al generar el archivo final
+    ruta_salida = os.path.join(os.environ.get('TEMP', os.getcwd()), f"reporte_{user_id}_{año_str}_{mes_str}.xlsm")
 
     if not os.path.exists(ruta_plantilla):
-        raise HTTPException(status_code=500, detail="Plantilla reporte.xlsm no encontrada")
+        raise HTTPException(status_code=500, detail=f"Plantilla no encontrada en: {ruta_plantilla}")
 
-    # --- INICIO BLOQUE CORREGIDO ---
     app_xw = xw.App(visible=False)
-    wb = None  # Inicializamos la variable wb
+    wb = None
     try:
         wb = app_xw.books.open(ruta_plantilla)
         ws = wb.sheets["Reporte de Asistencia"]
@@ -149,30 +147,21 @@ def procesar_reporte_excel(user_id, year, month):
             ws.range(f"F{fila}").value = evento["fin_almuerzo"]
             ws.range(f"G{fila}").value = evento["salida"]
             
-            if evento["fecha"]:
-                dia_semana = datetime.strptime(evento["fecha"], "%Y-%m-%d").weekday()
-                if dia_semana < 5: # Lunes a Viernes
-                    ws.range(f"H{fila}").formula = '=IF([@ENTRADA]>G$7,F$10-E$10-[@ENTRADA],IF([@SALIDA]<F$10,[@SALIDA]-E$10-D$10,G$10))'
-                else:
-                    ws.range(f"H{fila}").value = ""
+            # Solo aplicar fórmulas en días laborales
+            dia_semana = datetime.strptime(evento["fecha"], "%Y-%m-%d").weekday()
+            if dia_semana < 5: 
+                ws.range(f"H{fila}").formula = '=IF([@ENTRADA]>G$7,F$10-E$10-[@ENTRADA],IF([@SALIDA]<F$10,[@SALIDA]-E$10-D$10,G$10))'
             else:
                 ws.range(f"H{fila}").value = ""
                 
-        # GUARDAR Y CERRAR EXPLICITAMENTE ANTES DEL RETURN
         wb.save(ruta_salida)
         wb.close()
-        app_xw.quit()
-
-        # Pequeña pausa para que Windows libere el archivo completamente
-        time.sleep(0.5)
-
         return ruta_salida
 
     except Exception as e:
-        # En caso de error, intentamos cerrar todo a la fuerza
-        try:
-            if wb: wb.close()
-        except:
-            pass
+        raise HTTPException(status_code=500, detail=f"Error Excel: {str(e)}")
+    finally:
+        if wb:
+            try: wb.close()
+            except: pass
         app_xw.quit()
-        raise e

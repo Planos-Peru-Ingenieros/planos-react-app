@@ -42,4 +42,10 @@ if __name__ == "__main__":
     print(f"Endpoint Formulario disponible en: http://{HOST}:{PORT}/formularios/crear-formulario-registral")
     
     # Ejecutamos el servidor
-    uvicorn.run(app, host=HOST, port=PORT, log_level="info")
+    uvicorn.run(
+        "main:app",
+        host=HOST, 
+        port=int(PORT), 
+        log_level="info",
+        reload=False
+    )
