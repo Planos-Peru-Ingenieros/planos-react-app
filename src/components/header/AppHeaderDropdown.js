@@ -88,6 +88,16 @@ const AppHeaderDropdown = () => {
           <CIcon icon={cilLockLocked} className="me-2" />
           Lock Account
         </CDropdownItem>
+        <CDropdownItem 
+          onClick={() => {
+            localStorage.removeItem('user')
+            window.location.reload() // Forma rápida de resetear la app al login
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          <CIcon icon={cilAccountLogout} className="me-2" />
+          Cerrar Sesión
+        </CDropdownItem>
       </CDropdownMenu>
     </CDropdown>
   )

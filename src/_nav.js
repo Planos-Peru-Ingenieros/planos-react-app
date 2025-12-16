@@ -1,6 +1,12 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilSpeedometer, cilFile } from '@coreui/icons' // <--- DEBES IMPORTAR EL ÍCONO cilFile
+import { 
+  cilPencil, 
+  cilSpeedometer, 
+  cilFile, 
+  cilAccountLogout, 
+  cilSettings 
+} from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
 const _nav = [
@@ -26,12 +32,27 @@ const _nav = [
     to: '/asistencia',
     icon: <CIcon icon={cilPencil} customClassName="nav-icon" />,
   },
-  // La entrada que agregaste
   {
     component: CNavItem,
     name: 'Formulario Registral',
     to: '/formularios/registral',
-    icon: <CIcon icon={cilFile} customClassName="nav-icon" />, // Aquí usamos el icono importado
+    icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
+  },
+  // --- SECCIÓN DE SALIDA ---
+  {
+    component: CNavTitle,
+    name: 'Sistema',
+  },
+  // src/_nav.js
+  {
+    component: CNavItem,
+    name: 'Cerrar Sesión',
+    to: '/login', // Redirigimos al login directamente
+    icon: <CIcon icon={cilAccountLogout} customClassName="nav-icon" />,
+    onClick: () => {
+      localStorage.removeItem('user');
+      window.location.hash = '#/login'; // Fuerza la navegación en HashRouter
+    }
   },
 ]
 
