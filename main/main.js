@@ -5,7 +5,7 @@ const fs = require('fs')
 const isDev = require('electron-is-dev')
 const execFile = require('child_process').execFile
 
-const API_PROD_PATH = path.join(process.resourcesPath, '../lib/api/api.exe')
+const API_PROD_PATH = path.join(process.resourcesPath, 'lib', 'api', 'api.exe');
 const API_DEV_PATH = path.join(__dirname, '../backend/main.py')
 const INDEX_PATH = path.join(__dirname, '../build/index.html')
 const app_instance = app.requestSingleInstanceLock()
