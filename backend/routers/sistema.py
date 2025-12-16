@@ -1,6 +1,7 @@
 import os
 from fastapi import APIRouter
-from .. import api_model
+# --- CAMBIO AQUÍ: Quita los puntos ---
+import api_model 
 
 router = APIRouter()
 

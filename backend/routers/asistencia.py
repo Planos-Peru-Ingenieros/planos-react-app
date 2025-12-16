@@ -1,17 +1,19 @@
 import os
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from .. import api_model
-from ..services import hikvision
+
+# --- CAMBIO AQUÍ: Importaciones absolutas sin puntos ---
+import api_model 
+from services import hikvision
 
 router = APIRouter()
 
 @router.get("/api/users")
-def get_hikvision_users(): # <--- QUITÉ EL ASYNC AQUÍ
+def get_hikvision_users():
     return hikvision.obtener_usuarios_terminal()
 
 @router.post("/asistencia")
-def generar_reporte_asistencia(data: api_model.AsistenciaRequest): # <--- QUITÉ EL ASYNC AQUÍ (IMPORTANTE)
+def generar_reporte_asistencia(data: api_model.AsistenciaRequest):
     if not data.userId:
         raise HTTPException(status_code=404, detail=f"ID de usuario requerido.")
     

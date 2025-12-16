@@ -6,7 +6,7 @@ from datetime import datetime
 import xlwings as xw
 import fitz  # PyMuPDF
 from openpyxl import load_workbook # <--- Nuevo: Para editar el Formulario Registral
-from ..utils import get_resource_path
+from utils import get_resource_path
 
 # ==============================================================================
 #  LÓGICA DE COTIZACIONES (Tu código original con xlwings)

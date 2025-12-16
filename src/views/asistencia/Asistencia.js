@@ -27,7 +27,7 @@ const Asistencia = () => {
         setLoading(true)
         setError(null)
 
-        const response = await axios.get('http://127.0.0.1:8000/api/users')
+        const response = await axios.get('http://127.0.0.1:5000/api/users')
 
         setUsers(response.data)
       } catch (err) {
@@ -84,7 +84,7 @@ const Asistencia = () => {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/asistencia', {
+      const response = await fetch('http://127.0.0.1:5000/asistencia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

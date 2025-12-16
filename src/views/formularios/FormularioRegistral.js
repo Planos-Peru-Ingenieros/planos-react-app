@@ -27,9 +27,9 @@ const FormularioRegistral = () => {
     try {
       // ***************************************************************
       // CORRECCIÓN CRÍTICA: CAMBIO DE PUERTO 5000 a 8000 y URL correcta para FastAPI
-      // http://127.0.0.1:8000/formularios/crear-formulario-registral
+      // http://127.0.0.1:5000/formularios/crear-formulario-registral
       // ***************************************************************
-      const response = await fetch('http://127.0.0.1:8000/formularios/crear-formulario-registral', {
+      const response = await fetch('http://127.0.0.1:5000/formularios/crear-formulario-registral', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

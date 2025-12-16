@@ -8,8 +8,8 @@ from collections import defaultdict
 from fastapi import HTTPException
 import xlwings as xw
 
-from ..config import HK_URL_SEARCH, HK_URL_EVENTS, HK_AUTH
-from ..utils import get_resource_path
+from config import HK_URL_SEARCH, HK_URL_EVENTS, HK_AUTH
+from utils import get_resource_path
 
 HEADERS = {'Content-Type': 'application/json'}
 

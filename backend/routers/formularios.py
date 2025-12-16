@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Any
 
 # Importación relativa a la carpeta services
-from ..services.excel_service import generar_excel_formulario_registral 
+from services.excel_service import generar_excel_formulario_registral 
 
 # ==============================================================================
 # 1. Definición del Router (Debe llamarse 'router')

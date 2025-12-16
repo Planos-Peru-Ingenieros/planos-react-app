@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse
 from datetime import datetime
 import traceback
-from ..services import excel_service
+from services import excel_service
 
 router = APIRouter()
 

@@ -91,8 +91,7 @@ coreui-free-react-admin-template
 
 - INICIAR EL PROYECTO
 
-FROND:npm run electron-dev
-BACK:uvicorn backend.main:app --reload
+FROND y BACK: npm run electron-dev
 
 ---- PARA FLASK -----
 pip show pyinstaller
