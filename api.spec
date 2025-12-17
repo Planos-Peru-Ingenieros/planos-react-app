@@ -10,16 +10,19 @@ a = Analysis(
         ('public/favicon.ico', '.'),
         ('backend/docs', 'docs'),
         ('backend/routers', 'routers'),
+        # CORRECCIÓN: Usamos barras / para que PyInstaller no se pierda en Windows
+        ('backend/routers/robot_sunarp/sunarp_scraper.py', '.'),
         ('backend/services', 'services'),
         ('backend/utils.py', '.'),
         ('backend/api_model.py', '.'),
         ('backend/config.py', '.')
     ],
-    # Dentro de api.spec
     hiddenimports=[
         "main",
         "undetected_chromedriver",
         "selenium",
+        "selenium.webdriver.support.ui",
+        "selenium.webdriver.support.expected_conditions",
         "uvicorn.logging",
         "uvicorn.lifespan.off",
         "uvicorn.lifespan.on",
@@ -30,6 +33,7 @@ a = Analysis(
         "uvicorn.loops.auto",
         "uvicorn.loops.asyncio",
         "uvicorn.protocols",
+        "sunarp_scraper", # CORRECCIÓN: Se añadió la coma faltante aquí
         "asgiref",
         "fastapi",
         "pydantic",
@@ -37,11 +41,11 @@ a = Analysis(
         "requests",    
         "openpyxl",      
         "fitz",     
-        "xlwings"       
+        "xlwings"        
     ],
     hookspath=[],
     runtime_hooks=[],
-    excludes=["uvloop"], # Se excluye porque suele dar problemas en Windows
+    excludes=["uvloop"], 
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -64,7 +68,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True, # Déjalo en True para poder ver errores si el backend falla al iniciar
+    console=True, 
     icon='public/favicon.ico'
 )
 
