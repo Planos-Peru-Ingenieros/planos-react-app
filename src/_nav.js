@@ -33,6 +33,12 @@ const _nav = [
     to: '/formularios/registral',
     icon: <CIcon icon={cilFile} customClassName="nav-icon" />, // Aquí usamos el icono importado
   },
+  {
+    component: CNavItem,
+    name: 'Robot Sunarp',
+    to: '/robot-sunarp',
+    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />, // Puedes cambiar el icono
+  },
 ]
 
 export default _nav

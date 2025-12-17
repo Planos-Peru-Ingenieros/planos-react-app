@@ -18,6 +18,8 @@ a = Analysis(
     # Dentro de api.spec
     hiddenimports=[
         "main",
+        "undetected_chromedriver",
+        "selenium",
         "uvicorn.logging",
         "uvicorn.lifespan.off",
         "uvicorn.lifespan.on",

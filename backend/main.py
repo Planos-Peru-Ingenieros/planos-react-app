@@ -4,6 +4,7 @@ import asyncio
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routers import robot
 
 # Configuración de rutas para PyInstaller
 # Esto asegura que el ejecutable encuentre los módulos routers, services, etc.
@@ -30,7 +31,7 @@ app.include_router(cotizaciones.router)
 app.include_router(asistencia.router)
 app.include_router(sistema.router)
 app.include_router(formularios.router)
-
+app.include_router(robot.router)
 @app.get("/")
 def health_check():
     return {"status": "online", "message": "Backend Planos Peru funcionando"}
