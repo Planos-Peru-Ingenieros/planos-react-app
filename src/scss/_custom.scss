@@ -1,0 +1,51 @@
+/* Contenedor principal */
+.login-screen {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+/* Panel Izquierdo (Blanco) */
+.login-left-panel {
+  width: 400px; /* Ancho fijo para el formulario */
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fff;
+  z-index: 10;
+}
+
+/* Panel Derecho (Imagen de fondo) */
+.login-right-panel {
+  flex: 1; /* Ocupa el resto de la pantalla */
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-end; /* Texto abajo */
+  justify-content: flex-end; /* Texto a la derecha */
+  padding: 60px;
+}
+
+/* Oscurecer un poco la imagen para que el texto blanco resalte */
+.login-right-panel::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.2); 
+}
+
+.login-text-content {
+  position: relative; /* Para estar encima del overlay */
+  color: white;
+  text-align: right;
+}
+
+.login-text-content h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 0;
+}
