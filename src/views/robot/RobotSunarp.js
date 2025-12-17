@@ -1,59 +1,82 @@
 import React, { useState, useEffect } from 'react'
-import { CCard, CCardBody, CCardHeader, CButton, CAlert, CSpinner } from '@coreui/react'
+import {
+  CCard, CCardBody, CCardHeader, CCol, CRow, CButton,
+  CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell,
+  CBadge, CSpinner
+} from '@coreui/react'
 import axios from 'axios'
 
 const RobotSunarp = () => {
-  const [isActive, setIsActive] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [status, setStatus] = useState({ active: false, logs: [] })
 
-  // Consultar si el robot está prendido al cargar la página
   useEffect(() => {
-    checkStatus()
+    const fetchStatus = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/robot/status')
+        setStatus(res.data)
+      } catch (err) { console.error("Error API") }
+    }
+    fetchStatus()
+    const interval = setInterval(fetchStatus, 3000) 
+    return () => clearInterval(interval)
   }, [])
 
-  const checkStatus = async () => {
-    const res = await axios.get('http://localhost:5000/robot/status')
-    setIsActive(res.data.active)
-  }
-
-  const handleToggleRobot = async () => {
-    setLoading(true)
-    if (!isActive) {
-      await axios.post('http://localhost:5000/robot/start')
-    }
-    // Esperamos un segundo y actualizamos estado
-    setTimeout(() => {
-      checkStatus()
-      setLoading(false)
-    }, 1000)
-  }
+  const handleStart = () => axios.post('http://localhost:5000/robot/start')
+  const handleStop = () => axios.post('http://localhost:5000/robot/stop')
 
   return (
-    <CCard>
-      <CCardHeader>
-        <strong>Gestor de Robot Sunarp</strong>
-      </CCardHeader>
-      <CCardBody className="text-center">
-        <div className="mb-4">
-          <CAlert color={isActive ? 'success' : 'danger'}>
-            El Robot se encuentra actualmente: <strong>{isActive ? 'ACTIVO' : 'DETENIDO'}</strong>
-          </CAlert>
-        </div>
-        
-        <CButton 
-          color={isActive ? 'secondary' : 'primary'} 
-          size="lg"
-          onClick={handleToggleRobot}
-          disabled={loading || isActive}
-        >
-          {loading ? <CSpinner size="sm"/> : (isActive ? 'ROBOT EN EJECUCIÓN' : 'ENCENDER ROBOT')}
-        </CButton>
-        
-        <p className="mt-3 text-muted">
-          * Al encenderlo, el robot buscará expedientes pendientes en la Intranet y abrirá Chrome automáticamente.
-        </p>
-      </CCardBody>
-    </CCard>
+    <CRow>
+      <CCol md={3}>
+        <CCard className="mb-4 shadow-sm">
+          <CCardHeader>Panel de Control</CCardHeader>
+          <CCardBody className="text-center">
+            <div className={`mb-3 p-2 rounded ${status.active ? 'bg-light-success' : 'bg-light'}`}>
+                {status.active ? <strong>🟢 TRABAJANDO</strong> : <strong>⚪ IDLE</strong>}
+            </div>
+            <div className="d-grid gap-2">
+              <CButton color="primary" onClick={handleStart} disabled={status.active}>Iniciar Lectura</CButton>
+              <CButton color="danger" onClick={handleStop} disabled={!status.active}>Detener Robot</CButton>
+            </div>
+          </CCardBody>
+        </CCard>
+      </CCol>
+
+      <CCol md={9}>
+        <CCard className="mb-4 shadow-sm">
+          <CCardHeader>Seguimiento Detallado (OT | Título | Estado)</CCardHeader>
+          <CCardBody style={{ maxHeight: '500px', overflowY: 'auto' }}>
+            <CTable align="middle" hover responsive striped>
+              <CTableHead color="dark">
+                <CTableRow>
+                  <CTableHeaderCell style={{width: '120px'}}>Hora</CTableHeaderCell>
+                  <CTableHeaderCell>Detalle del Proceso</CTableHeaderCell>
+                  <CTableHeaderCell style={{width: '100px'}}>Nivel</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
+                {status.logs.map((log, index) => (
+                  <CTableRow key={index}>
+                    <CTableDataCell><strong>{log.hora}</strong></CTableDataCell>
+                    <CTableDataCell>
+                      {log.mensaje.includes('CAMBIO:') ? (
+                        <span className="text-success fw-bold" style={{fontSize: '0.9rem'}}>{log.mensaje}</span>
+                      ) : (
+                        <span style={{fontSize: '0.9rem'}}>{log.mensaje}</span>
+                      )}
+                    </CTableDataCell>
+                    <CTableDataCell>
+                      <CBadge color={log.tipo === 'success' ? 'success' : log.tipo === 'danger' ? 'danger' : 'info'}>
+                        {log.tipo.toUpperCase()}
+                      </CBadge>
+                    </CTableDataCell>
+                  </CTableRow>
+                ))}
+              </CTableBody>
+            </CTable>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
   )
 }
 
