@@ -18,37 +18,54 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
         driver = uc.Chrome(options=options, use_subprocess=True)
         driver.get("https://sigueloplus.sunarp.gob.pe/siguelo/")
         
-        wait = WebDriverWait(driver, 15)
+        wait = WebDriverWait(driver, 30)
 
-        # Cerrar términos iniciales
+        # 1. Cerrar términos iniciales
         try:
             btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn-sunarp-cyan")))
             driver.execute_script("arguments[0].click();", btn)
         except: pass 
 
-        # Seleccionar Oficina y Año
+        # 2. Selección de Oficina y Año
         Select(driver.find_element(By.CSS_SELECTOR, "select[id*='Oficina']")).select_by_visible_text(oficina)
         Select(driver.find_element(By.CSS_SELECTOR, "select[id*='Anio']")).select_by_visible_text(str(anio))
 
-        # Escribir Título
+        # 3. Ingreso de Título y ESPERA PARA RECAPTCHA (Cloudflare)
         input_t = driver.find_element(By.NAME, "numeroTitulo")
         driver.execute_script("arguments[0].value = arguments[1];", input_t, str(numero_titulo))
         driver.execute_script("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", input_t)
         input_t.send_keys(Keys.TAB)
-        time.sleep(2)
+        
+        # --- MODIFICACIÓN AQUÍ: Aumentamos a 8 segundos para que cargue la verificación ---
+        print("Esperando verificación de seguridad (Cloudflare)...")
+        time.sleep(8) 
+        # ----------------------------------------------------------------------------------
 
-        # Buscar
+        # 4. Click en Buscar
         btn_buscar = driver.find_element(By.XPATH, "//button[contains(., 'BUSCAR')]")
         driver.execute_script("arguments[0].click();", btn_buscar)
 
-        # Leer resultado
-        time.sleep(5)
+        # 5. MANEJO DEL RECUADRO "OK" (Si la verificación falló o tardó más)
+        time.sleep(10) 
+        try:
+            btn_ok = driver.find_element(By.XPATH, "//button[text()='OK']")
+            if btn_ok.is_displayed():
+                driver.execute_script("arguments[0].click();", btn_ok)
+                print("Aviso de captcha cerrado. Reintentando carga de resultados...")
+                time.sleep(8) 
+        except:
+            pass
+
+        # 6. Lectura del Estado Final
         res = wait.until(EC.presence_of_element_located((By.ID, "estadoActual")))
-        return res.get_attribute('value')
+        time.sleep(2)
+        valor_final = res.get_attribute('value')
+        
+        return valor_final if valor_final else "Sin Estado"
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error Scraper: {e}")
         return "Error"
     finally:
         if driver:
-            driver.quit() # Garantiza que la ventana se cierre siempre
+            driver.quit()
