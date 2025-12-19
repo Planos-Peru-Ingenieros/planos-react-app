@@ -45,7 +45,8 @@ export default function CrearCotizacion() {
   useEffect(() => {
     if (cotizacionSeleccionado) {
       // ***** INICIO CORRECCIÓN 1 *****
-      const cotizacionSeleccionada = cotizaciones.find( // USAR PLURAL
+      const cotizacionSeleccionada = cotizaciones.find(
+        // USAR PLURAL
         (c) => c.id === cotizacionSeleccionado,
       )
       // ***** FIN CORRECCIÓN 1 *****
@@ -72,9 +73,7 @@ export default function CrearCotizacion() {
                 )
                 break
               default:
-                setDetalles(
-                  'Se elaborará planos y documentos para , según normativa vigente.',
-                )
+                setDetalles('Se elaborará planos y documentos para , según normativa vigente.')
                 break
             }
             break
@@ -103,7 +102,8 @@ export default function CrearCotizacion() {
   useEffect(() => {
     if (cotizacionSeleccionado && montoTotal > 0) {
       // ***** INICIO CORRECCIÓN 3 *****
-      const selectedCotizacion = cotizaciones.find( // USAR PLURAL
+      const selectedCotizacion = cotizaciones.find(
+        // USAR PLURAL
         (c) => c.id === cotizacionSeleccionado,
       )
       // ***** FIN CORRECCIÓN 3 *****
@@ -143,8 +143,7 @@ export default function CrearCotizacion() {
             else if (i === 3) diasExtra = selectedCotizacion.dias3 || 0
 
             const fechaBase = i === 0 ? fechaHoy : fechas[fechas.length - 1]
-            const nuevaFecha =
-              i === 0 ? fechaHoy : sumarDiasHabiles(fechaBase, diasExtra)
+            const nuevaFecha = i === 0 ? fechaHoy : sumarDiasHabiles(fechaBase, diasExtra)
             fechas.push(nuevaFecha)
           }
         }
@@ -176,7 +175,8 @@ export default function CrearCotizacion() {
   // 10. Función ÚNICA para construir el JSON
   const construirDatosParaBackend = () => {
     // ***** INICIO CORRECCIÓN 5 *****
-    const selectedCotizacion = cotizaciones.find( // USAR PLURAL
+    const selectedCotizacion = cotizaciones.find(
+      // USAR PLURAL
       (c) => c.id === cotizacionSeleccionado,
     )
     // ***** FIN CORRECCIÓN 5 *****
@@ -185,8 +185,7 @@ export default function CrearCotizacion() {
     const cuotasCombinadas = montoCuotas.map((monto, index) => {
       let descripcionCuota = `Cuota ${index + 1}`
       if (index === 0) descripcionCuota = 'Adelanto'
-      else if (index === montoCuotas.length - 1)
-        descripcionCuota = 'Cancelación / Entrega final'
+      else if (index === montoCuotas.length - 1) descripcionCuota = 'Cancelación / Entrega final'
 
       return {
         monto: monto.toFixed(2),
@@ -216,90 +215,84 @@ export default function CrearCotizacion() {
   }
 
   // 11. Handlers para generar los archivos y GUARDAR EN BD
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    const datos = construirDatosParaBackend()
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const datos = construirDatosParaBackend()
 
     // ---------------------------------------------------------
     // PASO 1: GUARDAR EN LA BASE DE DATOS (DJANGO - Puerto 8000)
     // ---------------------------------------------------------
-    try {
-        // Agregamos el 'precio' al objeto porque tu serializer de Django lo espera
-        const datosParaDjango = { 
-            ...datos, 
-            precio: montoTotal 
-        }
+    /*try {
+      // Agregamos el 'precio' al objeto porque tu serializer de Django lo espera
+      const datosParaDjango = {
+        ...datos,
+        precio: montoTotal,
+      }
 
-        const responseBD = await fetch('http://127.0.0.1:8000/api/guardar-cotizacion/', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                // Si activaste el login en Django, descomenta la siguiente línea:
-                // 'Authorization': `Token ${localStorage.getItem('token')}` 
-            },
-            body: JSON.stringify(datosParaDjango),
-        })
+      const responseBD = await fetch('http://127.0.0.1:8000/api/guardar-cotizacion/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Si activaste el login en Django, descomenta la siguiente línea:
+          // 'Authorization': `Token ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(datosParaDjango),
+      })
 
-        if (responseBD.ok) {
-            console.log("✅ Cotización guardada exitosamente en la Base de Datos.")
-        } else {
-            const errorBD = await responseBD.text()
-            console.error("❌ Error al guardar en BD:", errorBD)
-            alert("Advertencia: No se pudo guardar en la Base de Datos, pero se intentará generar el Excel.")
-        }
+      if (responseBD.ok) {
+        console.log('✅ Cotización guardada exitosamente en la Base de Datos.')
+      } else {
+        const errorBD = await responseBD.text()
+        console.error('❌ Error al guardar en BD:', errorBD)
+      }
     } catch (error) {
-        console.error("❌ Error de conexión con Django:", error)
-        alert("Error: No se pudo conectar con el servidor de Base de Datos (Puerto 8000).")
-    }
+      console.error('❌ Error de conexión con Django:', error)
+    }*/
 
     // ---------------------------------------------------------
     // PASO 2: GENERAR EL EXCEL (ELECTRON - Puerto 5000)
     // ---------------------------------------------------------
-    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datos),
-    })
+    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      alert(`Error al generar el Excel: ${errorText}`)
-      return
-    }
+    if (!response.ok) {
+      const errorText = await response.text()
+      alert(`Error al generar el Excel: ${errorText}`)
+      return
+    }
 
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
 
-    const hoy = new Date()
-    const anio = hoy.getFullYear()
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
-    const dia = String(hoy.getDate()).padStart(2, '0')
-    const mes_dia = `${mes}${dia}`
-    const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
-    const limpiar = (texto) =>
-      texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
-    const cliente_limpio = limpiar(datos.cliente || 'Cliente')
-    const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
+    const hoy = new Date()
+    const anio = hoy.getFullYear()
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+    const dia = String(hoy.getDate()).padStart(2, '0')
+    const mes_dia = `${mes}${dia}`
+    const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
+    const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+    const cliente_limpio = limpiar(datos.cliente || 'Cliente')
+    const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
 
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.xlsx`
-    a.click()
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.xlsx`
+    a.click()
 
-    setShowModal(true)
-  }
+    setShowModal(true)
+  }
 
   const handleGeneratePDF = async () => {
-    const datos = construirDatosParaBackend() 
+    const datos = construirDatosParaBackend()
 
-    const response = await fetch(
-      'http://127.0.0.1:5000/crear-cotizacion-pdf',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos),
-      },
-    )
+    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    })
 
     if (!response.ok) {
       alert(`Error al generar el PDF: ${await response.text()}`)
@@ -314,8 +307,7 @@ export default function CrearCotizacion() {
     const dia = String(hoy.getDate()).padStart(2, '0')
     const mes_dia = `${mes}${dia}`
     const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
-    const limpiar = (texto) =>
-      texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+    const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
     const cliente_limpio = limpiar(datos.cliente || 'Cliente')
     const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
     const nombreArchivoPDF = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.pdf`
@@ -330,16 +322,13 @@ export default function CrearCotizacion() {
   }
 
   const handleGenerateJPG = async () => {
-    const datos = construirDatosParaBackend() 
+    const datos = construirDatosParaBackend()
 
-    const response = await fetch(
-      'http://127.0.0.1:5000/crear-cotizacion-jpg',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos),
-      },
-    )
+    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion-jpg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    })
 
     if (!response.ok) {
       alert(`Error al generar el JPG: ${await response.text()}`)
@@ -354,8 +343,7 @@ export default function CrearCotizacion() {
     const dia = String(hoy.getDate()).padStart(2, '0')
     const mes_dia = `${mes}${dia}`
     const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
-    const limpiar = (texto) =>
-      texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+    const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
     const cliente_limpio = limpiar(datos.cliente || 'Cliente')
     const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
     const nombreArchivoJPG = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.jpg`
@@ -383,9 +371,7 @@ export default function CrearCotizacion() {
   return (
     <div className="container">
       <div className="card mt-3">
-        <CCardHeader>
-          Llena el formulario para crear una nueva cotización xd .
-        </CCardHeader>
+        <CCardHeader>Llena el formulario para crear una nueva cotización xd .</CCardHeader>
         <div className="card-body">
           <CForm onSubmit={handleSubmit}>
             <FormularioEncabezado
