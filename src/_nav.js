@@ -43,23 +43,18 @@ const _nav = [
     component: CNavTitle,
     name: 'Sistema',
   },
-  // src/_nav.js
-  {
-    component: CNavItem,
-    name: 'Cerrar Sesión',
-    to: '/login', // Redirigimos al login directamente
-    icon: <CIcon icon={cilAccountLogout} customClassName="nav-icon" />,
-    onClick: () => {
-      localStorage.removeItem('user');
-      window.location.hash = '#/login'; // Fuerza la navegación en HashRouter
-    }
-  },
   {
     component: CNavItem,
     name: 'Robot Sunarp',
     to: '/robot-sunarp',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />, // Puedes cambiar el icono
   },
+  {
+  component: CNavItem,
+  name: 'Cerrar Sesión',
+  to: '/logout',
+  icon: <CIcon icon={cilAccountLogout} customClassName="nav-icon" />,
+},
 ]
 
 export default _nav
