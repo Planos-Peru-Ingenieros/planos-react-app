@@ -215,45 +215,76 @@ export default function CrearCotizacion() {
     }
   }
 
-  // 11. Handlers para generar los archivos (SIN CAMBIOS)
+  // 11. Handlers para generar los archivos
   const handleSubmit = async (e) => {
     e.preventDefault()
     const datos = construirDatosParaBackend()
+    try {
+      // Ajusta la IP si no es localhost (Aqui cabiar la url para la intranet)
+      const responseBD = await fetch('http://127.0.0.1:8000/api/cotizaciones/guardar/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      })
 
-    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datos),
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      alert(`Error al generar la cotización: ${errorText}`)
-      return
+      if (responseBD.ok) {
+        console.log("✅ Cotización guardada en BD correctamente")
+      } else {
+        const errorText = await responseBD.text()
+        console.error("⚠️ Error al guardar en BD:", errorText)
+      }
+    } catch (error) {
+      console.error("❌ Error de conexión con Django (BD):", error)
     }
 
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
+    try {
+      const response = await fetch('http://127.0.0.1:5000/crear-cotizacion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      })
 
-    const hoy = new Date()
-    const anio = hoy.getFullYear()
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
-    const dia = String(hoy.getDate()).padStart(2, '0')
-    const mes_dia = `${mes}${dia}`
-    const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
-    const limpiar = (texto) =>
-      texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
-    const cliente_limpio = limpiar(datos.cliente || 'Cliente')
-    const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
+      if (!response.ok) {
+        const errorText = await response.text()
+        alert(`Error al generar el archivo Excel: ${errorText}`)
+        return
+      }
 
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.xlsx`
-    a.click()
+      // Descargar el archivo
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
 
-    setShowModal(true)
+      const hoy = new Date()
+      const anio = hoy.getFullYear()
+      const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+      const dia = String(hoy.getDate()).padStart(2, '0')
+      const mes_dia = `${mes}${dia}`
+      
+      const abreviado_usuario = (datos.usuario && datos.usuario.length > 0) 
+        ? datos.usuario.slice(0, 3).toUpperCase() 
+        : 'USR'
+
+      const limpiar = (texto) =>
+        texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+        
+      const cliente_limpio = limpiar(datos.cliente || 'Cliente')
+      const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.xlsx`
+      document.body.appendChild(a) // Necesario en algunos navegadores
+      a.click()
+      document.body.removeChild(a) // Limpieza
+
+      // Mostrar modal de éxito
+      setShowModal(true)
+      
+    } catch (error) {
+      console.error("Error en servicio de Excel:", error)
+      alert("Error al conectar con el generador de Excel (Puerto 5000).")
+    }
   }
-
   const handleGeneratePDF = async () => {
     const datos = construirDatosParaBackend() 
 
