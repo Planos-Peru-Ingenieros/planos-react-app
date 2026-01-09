@@ -1,8 +1,11 @@
-import React, { Suspense, useEffect, useState } from 'react'
-import { HashRouter, Route, Routes, Navigate, useNavigate } from 'react-router-dom'
+import React, { Suspense, useEffect } from 'react'
+import { HashRouter, Route, Routes } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
+
+// We use those styles to show code examples, you should remove them in your application.
 import './scss/examples.scss'
 
 // Containers
@@ -14,23 +17,9 @@ const Register = React.lazy(() => import('./views/pages/register/Register'))
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 
-// Componente para manejar la acción de salida
-const LogoutAction = ({ onLogout }) => {
-  const navigate = useNavigate()
-  useEffect(() => {
-    localStorage.removeItem('user')
-    onLogout()
-    navigate('/login')
-  }, [onLogout, navigate])
-  return null
-}
-
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const storedTheme = useSelector((state) => state.theme)
-  
-  // Estado de autenticación reactivo
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('user'))
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.href.split('?')[1])
@@ -38,14 +27,13 @@ const App = () => {
     if (theme) {
       setColorMode(theme)
     }
+
     if (isColorModeSet()) {
       return
     }
-    setColorMode(storedTheme)
-  }, [isColorModeSet, setColorMode, storedTheme])
 
-  const handleLoginSuccess = () => setIsAuthenticated(true)
-  const handleLogout = () => setIsAuthenticated(false)
+    setColorMode(storedTheme)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <HashRouter>
@@ -57,27 +45,11 @@ const App = () => {
         }
       >
         <Routes>
-          <Route 
-            exact 
-            path="/login" 
-            element={isAuthenticated ? <Navigate to="/" /> : <Login onLoginSuccess={handleLoginSuccess} />} 
-          />
-          <Route exact path="/register" element={<Register />} />
-          <Route exact path="/404" element={<Page404 />} />
-          <Route exact path="/500" element={<Page500 />} />
-          
-          {/* Acción de Logout específica */}
-          <Route 
-            exact 
-            path="/logout" 
-            element={<LogoutAction onLogout={handleLogout} />} 
-          />
-
-          {/* Rutas protegidas */}
-          <Route 
-            path="*" 
-            element={isAuthenticated ? <DefaultLayout /> : <Navigate to="/login" replace />} 
-          />
+          <Route exact path="/login" name="Login Page" element={<Login />} />
+          <Route exact path="/register" name="Register Page" element={<Register />} />
+          <Route exact path="/404" name="Page 404" element={<Page404 />} />
+          <Route exact path="/500" name="Page 500" element={<Page500 />} />
+          <Route path="*" name="Home" element={<DefaultLayout />} />
         </Routes>
       </Suspense>
     </HashRouter>

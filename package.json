@@ -1,6 +1,6 @@
 {
   "name": "planos-peru",
-  "version": "1.0.1",
+  "version": "1.0.7",
   "description": "Planos Perú",
   "homepage": ".",
   "bugs": {
@@ -22,7 +22,7 @@
     "py-build": "python -m PyInstaller --workpath=backend/build --distpath=backend/dist api.spec",
     "electron-dev": "electron .",
     "electron-build": "electron-builder --config electron-builder.config.json",
-    "release": "electron-builder --config electron-builder.config.json --win --publish=always"
+    "release": "electron-builder --config electron-builder.config.json --win --publish always"
   },
   "dependencies": {
     "@coreui/chartjs": "^4.1.0",

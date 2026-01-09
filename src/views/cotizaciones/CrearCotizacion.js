@@ -45,7 +45,8 @@ export default function CrearCotizacion() {
   useEffect(() => {
     if (cotizacionSeleccionado) {
       // ***** INICIO CORRECCIÓN 1 *****
-      const cotizacionSeleccionada = cotizaciones.find( // USAR PLURAL
+      const cotizacionSeleccionada = cotizaciones.find(
+        // USAR PLURAL
         (c) => c.id === cotizacionSeleccionado,
       )
       // ***** FIN CORRECCIÓN 1 *****
@@ -72,9 +73,7 @@ export default function CrearCotizacion() {
                 )
                 break
               default:
-                setDetalles(
-                  'Se elaborará planos y documentos para , según normativa vigente.',
-                )
+                setDetalles('Se elaborará planos y documentos para , según normativa vigente.')
                 break
             }
             break
@@ -103,7 +102,8 @@ export default function CrearCotizacion() {
   useEffect(() => {
     if (cotizacionSeleccionado && montoTotal > 0) {
       // ***** INICIO CORRECCIÓN 3 *****
-      const selectedCotizacion = cotizaciones.find( // USAR PLURAL
+      const selectedCotizacion = cotizaciones.find(
+        // USAR PLURAL
         (c) => c.id === cotizacionSeleccionado,
       )
       // ***** FIN CORRECCIÓN 3 *****
@@ -143,8 +143,7 @@ export default function CrearCotizacion() {
             else if (i === 3) diasExtra = selectedCotizacion.dias3 || 0
 
             const fechaBase = i === 0 ? fechaHoy : fechas[fechas.length - 1]
-            const nuevaFecha =
-              i === 0 ? fechaHoy : sumarDiasHabiles(fechaBase, diasExtra)
+            const nuevaFecha = i === 0 ? fechaHoy : sumarDiasHabiles(fechaBase, diasExtra)
             fechas.push(nuevaFecha)
           }
         }
@@ -176,7 +175,8 @@ export default function CrearCotizacion() {
   // 10. Función ÚNICA para construir el JSON
   const construirDatosParaBackend = () => {
     // ***** INICIO CORRECCIÓN 5 *****
-    const selectedCotizacion = cotizaciones.find( // USAR PLURAL
+    const selectedCotizacion = cotizaciones.find(
+      // USAR PLURAL
       (c) => c.id === cotizacionSeleccionado,
     )
     // ***** FIN CORRECCIÓN 5 *****
@@ -185,8 +185,7 @@ export default function CrearCotizacion() {
     const cuotasCombinadas = montoCuotas.map((monto, index) => {
       let descripcionCuota = `Cuota ${index + 1}`
       if (index === 0) descripcionCuota = 'Adelanto'
-      else if (index === montoCuotas.length - 1)
-        descripcionCuota = 'Cancelación / Entrega final'
+      else if (index === montoCuotas.length - 1) descripcionCuota = 'Cancelación / Entrega final'
 
       return {
         monto: monto.toFixed(2),
@@ -286,16 +285,13 @@ export default function CrearCotizacion() {
     }
   }
   const handleGeneratePDF = async () => {
-    const datos = construirDatosParaBackend() 
+    const datos = construirDatosParaBackend()
 
-    const response = await fetch(
-      'http://127.0.0.1:5000/crear-cotizacion-pdf',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos),
-      },
-    )
+    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    })
 
     if (!response.ok) {
       alert(`Error al generar el PDF: ${await response.text()}`)
@@ -310,8 +306,7 @@ export default function CrearCotizacion() {
     const dia = String(hoy.getDate()).padStart(2, '0')
     const mes_dia = `${mes}${dia}`
     const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
-    const limpiar = (texto) =>
-      texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+    const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
     const cliente_limpio = limpiar(datos.cliente || 'Cliente')
     const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
     const nombreArchivoPDF = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.pdf`
@@ -326,16 +321,13 @@ export default function CrearCotizacion() {
   }
 
   const handleGenerateJPG = async () => {
-    const datos = construirDatosParaBackend() 
+    const datos = construirDatosParaBackend()
 
-    const response = await fetch(
-      'http://127.0.0.1:5000/crear-cotizacion-jpg',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos),
-      },
-    )
+    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion-jpg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    })
 
     if (!response.ok) {
       alert(`Error al generar el JPG: ${await response.text()}`)
@@ -350,8 +342,7 @@ export default function CrearCotizacion() {
     const dia = String(hoy.getDate()).padStart(2, '0')
     const mes_dia = `${mes}${dia}`
     const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
-    const limpiar = (texto) =>
-      texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+    const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
     const cliente_limpio = limpiar(datos.cliente || 'Cliente')
     const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
     const nombreArchivoJPG = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.jpg`
@@ -379,9 +370,7 @@ export default function CrearCotizacion() {
   return (
     <div className="container">
       <div className="card mt-3">
-        <CCardHeader>
-          Llena el formulario para crear una nueva cotización xd .
-        </CCardHeader>
+        <CCardHeader>Llena el formulario para crear una nueva cotización xd .</CCardHeader>
         <div className="card-body">
           <CForm onSubmit={handleSubmit}>
             <FormularioEncabezado
