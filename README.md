@@ -83,11 +83,10 @@ coreui-free-react-admin-template
 - PUBLICAR VERSIONES
 
 1. Cambiar la version del PACKAGE.JSON
-2. npm run install
-3. npm run build
+2. npm run build
+3. npm run py-build
 4. export GH_TOKEN=
-5. npx electron-builder --publish always (DEBE DECIR 100% PARA PODER VER LA NUEVA VERSION)
-
+5. npm run release --publish-always (DEBE DECIR 100% PARA PODER VER LA NUEVA VERSION)
 
 - INICIAR EL PROYECTO
 
