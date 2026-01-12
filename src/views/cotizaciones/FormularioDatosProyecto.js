@@ -1,11 +1,5 @@
 import React from 'react'
-import {
-  CFormLabel,
-  CFormInput,
-  CFormTextarea,
-  CRow,
-  CCol,
-} from '@coreui/react'
+import { CFormLabel, CFormInput, CFormTextarea, CRow, CCol } from '@coreui/react'
 
 // Componente presentacional para los datos del proyecto
 export default function FormularioDatosProyecto({
@@ -21,7 +15,7 @@ export default function FormularioDatosProyecto({
       {/* --- Detalles --- */}
       <CCol md={12}>
         <CFormLabel htmlFor="detalles">
-          Detalles <span className="text-danger">*</span>
+          Completar detalles de la cotización <span className="text-danger">*</span>
         </CFormLabel>
         <CFormTextarea
           name="detalles"
@@ -36,7 +30,7 @@ export default function FormularioDatosProyecto({
       {/* --- Número de Pisos --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="pisos">
-          Número de Pisos <span className="text-danger">*</span>
+          Número de niveles de edificaciones <span className="text-danger">*</span>
         </CFormLabel>
         <CFormInput
           type="text"
@@ -51,7 +45,7 @@ export default function FormularioDatosProyecto({
       {/* --- Área (m²) aprox. --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="area">
-          Área (m²) aprox.<span style={{ color: 'red' }}>*</span>
+          Área (m²) del terreno.<span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <CFormInput
           type="number"

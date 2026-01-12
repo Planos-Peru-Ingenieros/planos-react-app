@@ -29,7 +29,7 @@ export default function FormularioDatosCliente({
       {/* --- Cliente / Empresa --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="cliente">
-          Cliente / Empresa <span style={{ color: 'red' }}>*</span>
+          Nombre del Cliente <span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <CFormInput
           type="text"
@@ -56,7 +56,7 @@ export default function FormularioDatosCliente({
       {/* --- Ubicación --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="ubicacion">
-          Ubicación <span style={{ color: 'red' }}>*</span>
+          Distrito <span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <CFormInput
           type="text"

@@ -413,7 +413,7 @@ export default function CrearCotizacion() {
 
             <div className="mb-3">
               <label className="form-label" htmlFor="observaciones">
-                Observaciones
+                Anotaciones
               </label>
               <textarea
                 className="form-control"
