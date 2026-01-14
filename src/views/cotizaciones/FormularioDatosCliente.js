@@ -16,7 +16,7 @@ export default function FormularioDatosCliente({
     <CRow className="g-3">
       {/* --- DNI / RUC --- */}
       <CCol md={6}>
-        <CFormLabel htmlFor="dni">DNI / RUC</CFormLabel>
+        <CFormLabel htmlFor="dni">DNI / RUC N°: </CFormLabel>
         <CFormInput
           type="text"
           name="dni"
@@ -29,7 +29,7 @@ export default function FormularioDatosCliente({
       {/* --- Cliente / Empresa --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="cliente">
-          Nombre del Cliente <span style={{ color: 'red' }}>*</span>
+          Nombre del Cliente o la Empresa que Representa <span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <CFormInput
           type="text"
@@ -43,7 +43,7 @@ export default function FormularioDatosCliente({
 
       {/* --- Teléfono --- */}
       <CCol md={6}>
-        <CFormLabel htmlFor="telefono">Teléfono</CFormLabel>
+        <CFormLabel htmlFor="telefono">N° de Teléfono del Cliente</CFormLabel>
         <CFormInput
           type="text"
           name="telefono"
@@ -56,7 +56,7 @@ export default function FormularioDatosCliente({
       {/* --- Ubicación --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="ubicacion">
-          Distrito <span style={{ color: 'red' }}>*</span>
+          Distrito del Predio <span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <CFormInput
           type="text"

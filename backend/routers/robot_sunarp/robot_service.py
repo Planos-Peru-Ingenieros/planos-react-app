@@ -51,7 +51,8 @@ def iniciar_agente_hilo(agregar_log_func):
 
                 if nuevo_estado and "Error" not in nuevo_estado:
                     nuevo_estado = nuevo_estado.strip().upper()
-
+                    if nuevo_estado == "EN CALIFICACION":
+                        nuevo_estado = "EN CALIFICACIÓN"
                     # FORMATO DE MENSAJE CORTO
                     if nuevo_estado == estado_previo:
                         detalle = f"OT: {ot_visible} | TITULO: {titulo} ({anio}) -> El expediente no ha cambiado."

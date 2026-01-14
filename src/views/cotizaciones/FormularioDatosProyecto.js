@@ -15,7 +15,7 @@ export default function FormularioDatosProyecto({
       {/* --- Detalles --- */}
       <CCol md={12}>
         <CFormLabel htmlFor="detalles">
-          Completar detalles de la cotización <span className="text-danger">*</span>
+          Descripción del Servicio <span className="text-danger">*</span>
         </CFormLabel>
         <CFormTextarea
           name="detalles"
@@ -30,7 +30,7 @@ export default function FormularioDatosProyecto({
       {/* --- Número de Pisos --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="pisos">
-          Número de niveles de edificaciones <span className="text-danger">*</span>
+          N° de teléfono del Cliente <span className="text-danger">*</span>
         </CFormLabel>
         <CFormInput
           type="text"
@@ -45,7 +45,7 @@ export default function FormularioDatosProyecto({
       {/* --- Área (m²) aprox. --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="area">
-          Área (m²) del terreno.<span style={{ color: 'red' }}>*</span>
+          Área (m²) aproximada del terreno.<span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <CFormInput
           type="number"

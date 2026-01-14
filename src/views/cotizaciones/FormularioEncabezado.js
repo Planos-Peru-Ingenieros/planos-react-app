@@ -64,7 +64,7 @@ export default function FormularioEncabezado({
     <div className="row">
       <div className="col-md-6 mb-3">
         <CFormLabel htmlFor="user">
-          Usuario<span style={{ color: 'red' }}>*</span>
+          Nombre del Usuario<span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <Select
           options={opcionesUsuario}
@@ -80,13 +80,13 @@ export default function FormularioEncabezado({
 
       <div className="col-md-6 mb-3">
         <label className="form-label">
-          Servicios <span style={{ color: 'red' }}>*</span>
+          Servicio Solicitado <span style={{ color: 'red' }}>*</span>
         </label>
         <Select
           options={opcionesCotizacion}
           value={valorCotizacionActual}
           onChange={handleCotizacionChange}
-          placeholder={loading ? 'Cargando...' : 'Seleccione una cotización'}
+          placeholder={loading ? 'Cargando...' : 'Seleccione servicio'}
           isDisabled={loading}
         />
       </div>
