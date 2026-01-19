@@ -30,7 +30,7 @@ export default function FormularioDatosProyecto({
       {/* --- Número de Pisos --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="pisos">
-          N° de teléfono del Cliente <span className="text-danger">*</span>
+          N° de niveles del predio <span className="text-danger">*</span>
         </CFormLabel>
         <CFormInput
           type="text"
