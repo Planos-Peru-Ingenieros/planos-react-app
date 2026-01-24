@@ -13,7 +13,7 @@ export default function FormularioCalculoCuotas({
       {/* --- Campo para ingresar el monto total --- */}
       <div className="mb-3">
         <CFormLabel htmlFor="montoTotal">
-          Costo de Cancelación <span style={{ color: 'red' }}>*</span>
+          Precio de Venta <span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <input
           type="number"

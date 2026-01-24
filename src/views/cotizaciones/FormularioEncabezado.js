@@ -40,9 +40,7 @@ export default function FormularioEncabezado({
     const masSolicitado = cotizacionesArray.filter(
       (c) => c.entidad?.toLowerCase().trim() === 'mas solicitado',
     )
-    const sunarp = cotizacionesArray.filter(
-      (c) => c.entidad?.toLowerCase().trim() === 'sunarp',
-    )
+    const sunarp = cotizacionesArray.filter((c) => c.entidad?.toLowerCase().trim() === 'sunarp')
     const otros = cotizacionesArray.filter(
       (c) =>
         c.entidad?.toLowerCase().trim() !== 'sunarp' &&
@@ -54,7 +52,7 @@ export default function FormularioEncabezado({
       { label: 'SUNARP', options: mapAndSort(sunarp) },
       { label: 'OTROS', options: mapAndSort(otros) },
     ]
-  }, [cotizacion]) 
+  }, [cotizacion])
 
   const valorCotizacionActual = useMemo(() => {
     if (!cotizacionSeleccionado) return null
@@ -66,14 +64,12 @@ export default function FormularioEncabezado({
     <div className="row">
       <div className="col-md-6 mb-3">
         <CFormLabel htmlFor="user">
-          Usuario<span style={{ color: 'red' }}>*</span>
+          Nombre del Usuario<span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <Select
           options={opcionesUsuario}
           value={
-            usuarioSeleccionado
-              ? { value: usuarioSeleccionado, label: usuarioSeleccionado }
-              : null
+            usuarioSeleccionado ? { value: usuarioSeleccionado, label: usuarioSeleccionado } : null
           }
           onChange={handleUsuarioChange}
           placeholder={loading ? 'Cargando...' : 'Seleccione un usuario'}
@@ -84,13 +80,13 @@ export default function FormularioEncabezado({
 
       <div className="col-md-6 mb-3">
         <label className="form-label">
-          Cotización <span style={{ color: 'red' }}>*</span>
+          Servicio Solicitado <span style={{ color: 'red' }}>*</span>
         </label>
         <Select
           options={opcionesCotizacion}
           value={valorCotizacionActual}
           onChange={handleCotizacionChange}
-          placeholder={loading ? 'Cargando...' : 'Seleccione una cotización'}
+          placeholder={loading ? 'Cargando...' : 'Seleccione servicio'}
           isDisabled={loading}
         />
       </div>
