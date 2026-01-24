@@ -23,7 +23,7 @@ def iniciar_agente_hilo(agregar_log_func):
     stop_event.clear()
 
     # URL LOCAL (Mientras pruebas) - Cámbiala a la real cuando subas a producción
-    URL_BASE = "https://planosperu.com.pe/intranet"
+    URL_BASE = "https://intranet.planosperu.com.pe/"
 
     logs_importantes = []
     logs_relleno = []
