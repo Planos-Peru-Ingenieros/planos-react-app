@@ -4,8 +4,6 @@ import threading
 import time
 from datetime import datetime
 import requests
-
-# Configuración de rutas para el EXE
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.append(current_dir)
@@ -22,8 +20,9 @@ def iniciar_agente_hilo(agregar_log_func):
     global stop_event
     stop_event.clear()
 
-    # URL LOCAL (Mientras pruebas) - Cámbiala a la real cuando subas a producción
-    URL_BASE = "https://intranet.planosperu.com.pe/"
+    # URL LOCAL (Para tus pruebas)
+    # URL_BASE = "http://127.0.0.1:8000"
+    URL_BASE = "https://intranet.planosperu.com.pe"
 
     logs_importantes = []
     logs_relleno = []
@@ -71,29 +70,32 @@ def iniciar_agente_hilo(agregar_log_func):
                 estado_previo = str(tarea.get('estado', '')).strip().upper()
 
                 agregar_log_func(f"🚀 Procesando OT: {ot_visible}...", "info")
+                resultado = consultar_estado_sunarp(anio, titulo, oficina)
+                nuevo_estado_raw = resultado.get("estado", "Error")
+                fecha_vencimiento = resultado.get("vencimiento", "")
 
-                nuevo_estado = consultar_estado_sunarp(anio, titulo, oficina)
-
-                if nuevo_estado and "Error" not in nuevo_estado:
-                    nuevo_estado = nuevo_estado.strip().upper()
+                if nuevo_estado_raw and "Error" not in nuevo_estado_raw:
+                    nuevo_estado = nuevo_estado_raw.strip().upper()
                     if nuevo_estado == "EN CALIFICACION":
                         nuevo_estado = "EN CALIFICACIÓN"
-
-                    # --- LÓGICA DE CLASIFICACIÓN ---
                     if nuevo_estado == estado_previo:
-                        # SIN CAMBIOS -> Va al final (Relleno) y color Azul (Info)
-                        detalle = f"OT: {ot_visible} ({titulo}) -> Sigue en {nuevo_estado} (Sin cambios)"
+                        detalle = f"OT: {ot_visible} ({titulo}) -> Sigue en {nuevo_estado} (Vence: {fecha_vencimiento})"
                         log_interno(detalle, "info", es_importante=False)
                     else:
-                        # CON CAMBIOS -> Va al principio (Importante) y color Verde (Success)
-                        detalle = f"OT: {ot_visible} ({titulo}) -> CAMBIÓ A: {nuevo_estado}"
+                        detalle = f"OT: {ot_visible} ({titulo}) -> CAMBIÓ A: {nuevo_estado} (Vence: {fecha_vencimiento})"
                         log_interno(detalle, "success", es_importante=True)
-
-                        # Guardar en BD solo si hubo cambio
+                    try:
                         requests.post(f"{URL_BASE}/api/robot/guardar/",
-                                      json={"id": tarea['id'], "estado": nuevo_estado})
+                                      json={
+                                          "id": tarea['id'], 
+                                          "estado": nuevo_estado,
+                                          "vencimiento": fecha_vencimiento 
+                                      })
+                    except Exception as e:
+                        print(f"Error enviando datos al backend: {e}")
+
                 else:
-                    # ERROR -> Importante y Rojo
+                    # ERROR EN SCRAPER
                     log_interno(
                         f"⚠️ OT: {ot_visible} | Falló consulta Sunarp.", "danger", es_importante=True)
 
@@ -106,19 +108,19 @@ def iniciar_agente_hilo(agregar_log_func):
             enviar_email_final(URL_BASE, logs_ordenados)
 
         else:
-            log_interno(f"❌ Error API: {resp.status_code}", "danger")
+            log_interno(f"❌ Error API Pendientes: {resp.status_code}", "danger")
             enviar_email_final(URL_BASE, logs_importantes)
 
     except Exception as e:
-        log_interno(f"❌ Error Crítico: {str(e)}", "danger")
+        log_interno(f"❌ Error Crítico Robot: {str(e)}", "danger")
         enviar_email_final(URL_BASE, logs_importantes)
 
 
 def enviar_email_final(url_base, logs):
-    """Envía los logs al backend de Django"""
+    """Envía los logs al backend de Django para reporte o email"""
     try:
         url_reporte = f"{url_base}/api/robot/enviar-reporte/"
         requests.post(url_reporte, json={"logs": logs}, timeout=10)
         print(">> Reporte enviado al servidor Django.")
     except Exception as e:
-        print(f">> Error enviando reporte: {e}")
+        print(f">> Error enviando reporte final: {e}")

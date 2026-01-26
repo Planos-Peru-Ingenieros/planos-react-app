@@ -64,17 +64,24 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
         except:
             pass
 
-        # 6. Lectura del Estado Final
-        res = wait.until(EC.presence_of_element_located(
-            (By.ID, "estadoActual")))
+        res = wait.until(EC.presence_of_element_located((By.ID, "estadoActual")))
         time.sleep(2)
         valor_final = res.get_attribute('value')
+        fecha_vencimiento = ""
+        try:
+            input_fecha = driver.find_element(By.ID, "fechaVencimiento")
+            fecha_vencimiento = input_fecha.get_attribute('value') # Debería venir como dd/mm/yyyy
+        except Exception:
+            fecha_vencimiento = ""
 
-        return valor_final if valor_final else "Sin Estado"
+        return {
+            "estado": valor_final if valor_final else "Sin Estado",
+            "vencimiento": fecha_vencimiento
+        }
 
     except Exception as e:
         print(f"Error Scraper: {e}")
-        return "Error"
+        return {"estado": "Error", "vencimiento": ""} # Devolver diccionario de error
     finally:
         if driver:
             driver.quit()
