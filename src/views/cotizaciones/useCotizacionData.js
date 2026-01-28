@@ -6,7 +6,7 @@ import axios from 'axios'
 export default function useCotizacionData() {
   const [data, setData] = useState({
     cotizaciones: [], // Inicia como array vacío
-    usuarios: [],     // Inicia como array vacío
+    usuarios: [], // Inicia como array vacío
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -14,12 +14,8 @@ export default function useCotizacionData() {
   useEffect(() => {
     setLoading(true)
 
-    const fetchCotizaciones = axios.get(
-      'http://planosperu.com.pe/intranet/api/tipot/',
-    )
-    const fetchUsuarios = axios.get(
-      'http://planosperu.com.pe/intranet/api/users/',
-    )
+    const fetchCotizaciones = axios.get('http://intranet.planosperu.com.pe/api/tipot/')
+    const fetchUsuarios = axios.get('http://intranet.planosperu.com.pe/api/users/')
 
     Promise.all([fetchCotizaciones, fetchUsuarios])
       .then((responses) => {
@@ -47,7 +43,7 @@ export default function useCotizacionData() {
       .finally(() => {
         setLoading(false)
       })
-  }, []) 
+  }, [])
 
   return {
     cotizaciones: data.cotizaciones,
