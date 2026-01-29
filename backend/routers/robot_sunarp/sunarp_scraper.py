@@ -16,7 +16,8 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
 
     driver = None
     try:
-        driver = uc.Chrome(options=options, use_subprocess=True)
+        driver = uc.Chrome(
+            options=options, use_subprocess=True, version_main=144)
         driver.get("https://sigueloplus.sunarp.gob.pe/siguelo/")
 
         wait = WebDriverWait(driver, 30)
@@ -64,13 +65,15 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
         except:
             pass
 
-        res = wait.until(EC.presence_of_element_located((By.ID, "estadoActual")))
+        res = wait.until(EC.presence_of_element_located(
+            (By.ID, "estadoActual")))
         time.sleep(2)
         valor_final = res.get_attribute('value')
         fecha_vencimiento = ""
         try:
             input_fecha = driver.find_element(By.ID, "fechaVencimiento")
-            fecha_vencimiento = input_fecha.get_attribute('value') # Debería venir como dd/mm/yyyy
+            fecha_vencimiento = input_fecha.get_attribute(
+                'value')  # Debería venir como dd/mm/yyyy
         except Exception:
             fecha_vencimiento = ""
 
@@ -81,7 +84,8 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
 
     except Exception as e:
         print(f"Error Scraper: {e}")
-        return {"estado": "Error", "vencimiento": ""} # Devolver diccionario de error
+        # Devolver diccionario de error
+        return {"estado": "Error", "vencimiento": ""}
     finally:
         if driver:
             driver.quit()
