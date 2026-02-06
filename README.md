@@ -86,7 +86,7 @@ coreui-free-react-admin-template
 2. npm run build
 3. npm run py-build
 4. export GH_TOKEN=
-5. npm run release --publish-always (DEBE DECIR 100% PARA PODER VER LA NUEVA VERSION)
+5. npm run release (DEBE DECIR 100% PARA PODER VER LA NUEVA VERSION)
 
 - INICIAR EL PROYECTO
 
