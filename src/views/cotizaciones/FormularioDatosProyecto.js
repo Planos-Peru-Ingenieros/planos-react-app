@@ -48,13 +48,14 @@ export default function FormularioDatosProyecto({
           Área (m²) aproximada del terreno.<span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <CFormInput
-          type="number"
-          step="0.01"
+          type="text"
           name="area"
           id="area"
           required
           value={area}
-          onChange={(e) => setArea(e.target.value)}
+          onChange={(e) => {
+            if (/^\d*$/.test(e.target.value)) return setArea(e.target.value)
+          }}
         />
       </CCol>
     </CRow>

@@ -16,9 +16,10 @@ export default function FormularioCalculoCuotas({
           Precio de Venta <span style={{ color: 'red' }}>*</span>
         </CFormLabel>
         <input
-          type="number"
-          step="0.01"
-          className="form-control" // Usamos className normal, ya que no es un CFormInput
+          type="text"
+          inputMode="decimal"
+          className="form-control"
+          pattern="[0-9]+([.,][0-9]{1,2})?"
           id="montoTotal"
           value={montoTotal}
           onChange={handleMontoTotalChange}

@@ -16,13 +16,38 @@ export default function FormularioDatosCliente({
     <CRow className="g-3">
       {/* --- DNI / RUC --- */}
       <CCol md={6}>
-        <CFormLabel htmlFor="dni">DNI / RUC N°: </CFormLabel>
+        <CFormLabel htmlFor="dni">
+          <span
+            style={{
+              color: dni.length === 7 ? '#016f17' : '',
+              transition: 'color 400ms ease, text-shadow 400ms ease',
+            }}
+          >
+            DNI
+          </span>{' '}
+          /{' '}
+          <span
+            style={{
+              color: dni.length === 11 ? '#016f17' : '',
+              transition: 'color 400ms ease, text-shadow 400ms ease',
+            }}
+          >
+            RUC
+          </span>{' '}
+          N°:{' '}
+        </CFormLabel>
         <CFormInput
           type="text"
           name="dni"
           id="dni"
           value={dni}
+          style={{
+            color: (dni.length === 7) | (dni.length === 11) ? '#00c127' : '',
+            transition: 'color 400ms ease',
+            fontWeight: '500',
+          }}
           onChange={(e) => setDni(e.target.value)}
+          maxLength={11}
         />
       </CCol>
 

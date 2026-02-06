@@ -169,7 +169,9 @@ export default function CrearCotizacion() {
   }
 
   const handleMontoTotalChange = (e) => {
-    setMontoTotal(e.target.value)
+    if (/^\d*$/.test(e.target.value)) {
+      setMontoTotal(e.target.value)
+    }
   }
 
   // 10. Función ÚNICA para construir el JSON
@@ -220,20 +222,23 @@ export default function CrearCotizacion() {
     const datos = construirDatosParaBackend()
     try {
       // Ajusta la IP si no es localhost (Aqui cabiar la url para la intranet)
-      const responseBD = await fetch('https://intranet.planosperu.com.pe/api/cotizaciones/guardar/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos),
-      })
+      const responseBD = await fetch(
+        'https://intranet.planosperu.com.pe/api/cotizaciones/guardar/',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos),
+        },
+      )
 
       if (responseBD.ok) {
-        console.log("✅ Cotización guardada en BD correctamente")
+        console.log('✅ Cotización guardada en BD correctamente')
       } else {
         const errorText = await responseBD.text()
-        console.error("⚠️ Error al guardar en BD:", errorText)
+        console.error('⚠️ Error al guardar en BD:', errorText)
       }
     } catch (error) {
-      console.error("❌ Error de conexión con Django (BD):", error)
+      console.error('❌ Error de conexión con Django (BD):', error)
     }
 
     try {
@@ -258,14 +263,12 @@ export default function CrearCotizacion() {
       const mes = String(hoy.getMonth() + 1).padStart(2, '0')
       const dia = String(hoy.getDate()).padStart(2, '0')
       const mes_dia = `${mes}${dia}`
-      
-      const abreviado_usuario = (datos.usuario && datos.usuario.length > 0) 
-        ? datos.usuario.slice(0, 3).toUpperCase() 
-        : 'USR'
 
-      const limpiar = (texto) =>
-        texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
-        
+      const abreviado_usuario =
+        datos.usuario && datos.usuario.length > 0 ? datos.usuario.slice(0, 3).toUpperCase() : 'USR'
+
+      const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+
       const cliente_limpio = limpiar(datos.cliente || 'Cliente')
       const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
 
@@ -278,10 +281,9 @@ export default function CrearCotizacion() {
 
       // Mostrar modal de éxito
       setShowModal(true)
-      
     } catch (error) {
-      console.error("Error en servicio de Excel:", error)
-      alert("Error al conectar con el generador de Excel (Puerto 5000).")
+      console.error('Error en servicio de Excel:', error)
+      alert('Error al conectar con el generador de Excel (Puerto 5000).')
     }
   }
   const handleGeneratePDF = async () => {
@@ -370,7 +372,7 @@ export default function CrearCotizacion() {
   return (
     <div className="container">
       <div className="card mt-3">
-        <CCardHeader>Llena el formulario para crear una nueva cotización xd .</CCardHeader>
+        <CCardHeader>Llena el formulario para crear una nueva cotización.</CCardHeader>
         <div className="card-body">
           <CForm onSubmit={handleSubmit}>
             <FormularioEncabezado
