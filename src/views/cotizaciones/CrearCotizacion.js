@@ -43,60 +43,64 @@ export default function CrearCotizacion() {
 
   // 7. Efecto que actualiza los 'detalles'
   useEffect(() => {
-    if (cotizacionSeleccionado) {
-      // ***** INICIO CORRECCIÓN 1 *****
-      const cotizacionSeleccionada = cotizaciones.find(
-        // USAR PLURAL
-        (c) => c.id === cotizacionSeleccionado,
-      )
-      // ***** FIN CORRECCIÓN 1 *****
-
-      if (cotizacionSeleccionada) {
-        // ... (el resto del switch/case estaba bien) ...
-        setObservaciones(cotizacionSeleccionada.observaciones || '')
-        switch (cotizacionSeleccionada.tipo) {
-          case 'Planos y Documentos':
-            switch (cotizacionSeleccionada.codigo) {
-              case 'DEC-SUB':
-                setDetalles(
-                  'Se elaborará planos y documentos para saneamiento legal de un inmueble () sin cargas tecnicas, segun normativas vigentes de los Registros Públicos.',
-                )
-                break
-              case 'IND':
-                setDetalles(
-                  'Se elaborará planos y documentos para saneamiento legal de un inmueble () sin cargas tecnicas, segun normativas vigentes de los Registros Públicos.',
-                )
-                break
-              case 'BUS-CAT':
-                setDetalles(
-                  'Se elaborará planos y documentos de un inmueble georeferenciados con coordenadas UTM, segun normativas vigentes de los Registros Públicos.',
-                )
-                break
-              default:
-                setDetalles('Se elaborará planos y documentos para , según normativa vigente.')
-                break
-            }
-            break
-          case 'Documentos':
-            setDetalles('Se elaborará documentos para , según normativa vigente.')
-            break
-          case 'Planos':
-            setDetalles('Se elaborará planos para')
-            break
-          default:
-            setDetalles('')
-        }
-      } else {
-        setDetalles('')
-        setObservaciones('')
-      }
-    } else {
+    if (!cotizacionSeleccionado) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDetalles('')
       setObservaciones('')
+      return
     }
-    // ***** INICIO CORRECCIÓN 2 *****
-  }, [cotizacionSeleccionado, cotizaciones]) // USAR PLURAL
-  // ***** FIN CORRECCIÓN 2 *****
+
+    const cot = cotizaciones.find((c) => c.id === cotizacionSeleccionado)
+    if (!cot) return
+
+    let observacionesValue = cot?.observaciones || ''
+    let detallesValue = ''
+    switch (cot.tipo) {
+      case 'Planos y Documentos':
+        switch (cot.codigo) {
+          case 'DEC-FAB':
+            detallesValue =
+              'Se elaborarán planos y documentos para el saneamiento del inmueble, sin cargas técnicas bajo la normativa vigente de Registros Públicos.'
+            break
+          case 'DEC-IND':
+            detallesValue =
+              'Se elaborarán planos y documentos para el saneamiento del inmueble e independencia, sin cargas técnicas bajo la normativa vigente de Registros Públicos.'
+            break
+          case 'DEC-SUB':
+            detallesValue =
+              'Se elaborarán planos y documentos para el saneamiento del inmueble y subdivisión, sin cargas técnicas bajo la normativa vigente de Registros Públicos.'
+            break
+          case 'IND':
+            detallesValue =
+              'Se elaborarán planos y documentos para la independización del inmueble, bajo la normativa vigente de Registros Públicos.'
+            break
+          case 'BUS-CAT':
+            detallesValue =
+              'Se elaborará planos y documentos de un inmueble georeferenciados con coordenadas UTM, segun normativas vigentes de los Registros Públicos.'
+            break
+          default:
+            detallesValue = 'Se elaborará planos y documentos para , según normativa vigente.'
+            break
+        }
+        break
+      case 'Documentos':
+        switch (cot.codigo) {
+          case 'LEV-CAR':
+            detallesValue =
+              'Se elaborarán formularios y documentos para el sustento legal del levantamiento de cargas del inmueble, bajo la normativa vigente de Registros Públicos.'
+            break
+        }
+        break
+      case 'Planos':
+        detallesValue = 'Se elaborará planos para.'
+        break
+      default:
+        detallesValue = ''
+        break
+    }
+    setDetalles(detallesValue)
+    setObservaciones(observacionesValue)
+  }, [cotizacionSeleccionado, cotizaciones])
 
   // 8. Efecto que RE-CALCULA LAS CUOTAS
   useEffect(() => {
