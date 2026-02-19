@@ -19,7 +19,7 @@ export default function FormularioDatosCliente({
         <CFormLabel htmlFor="dni">
           <span
             style={{
-              color: dni.length === 7 ? '#016f17' : '',
+              color: dni.length === 8 ? '#016f17' : '',
               transition: 'color 400ms ease, text-shadow 400ms ease',
             }}
           >
@@ -42,7 +42,7 @@ export default function FormularioDatosCliente({
           id="dni"
           value={dni}
           style={{
-            color: (dni.length === 7) | (dni.length === 11) ? '#00c127' : '',
+            color: (dni.length === 8) | (dni.length === 11) ? '#00c127' : '',
             transition: 'color 400ms ease',
             fontWeight: '500',
           }}
