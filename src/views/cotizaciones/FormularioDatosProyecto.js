@@ -9,6 +9,10 @@ export default function FormularioDatosProyecto({
   setPisos,
   area,
   setArea,
+  ubicacion,
+  setUbicacion,
+  titulos,
+  setTitulos,
 }) {
   return (
     <CRow className="g-3">
@@ -56,6 +60,33 @@ export default function FormularioDatosProyecto({
           onChange={(e) => {
             if (/^\d*$/.test(e.target.value)) return setArea(e.target.value)
           }}
+        />
+      </CCol>
+
+      <CCol md={6}>
+        <CFormLabel htmlFor="ubicacion">
+          Distrito del Predio <span style={{ color: 'red' }}>*</span>
+        </CFormLabel>
+        <CFormInput
+          type="text"
+          name="ubicacion"
+          id="ubicacion"
+          required
+          value={ubicacion}
+          onChange={(e) => setUbicacion(e.target.value)}
+        />
+      </CCol>
+
+      <CCol md={6}>
+        <CFormLabel htmlFor="titulos">
+          Titulos <span style={{ color: 'red' }}>*</span>
+        </CFormLabel>
+        <CFormInput
+          type="text"
+          name="titulos"
+          id="titulos"
+          value={titulos}
+          onChange={(e) => setTitulos(e.target.value)}
         />
       </CCol>
     </CRow>

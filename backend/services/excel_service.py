@@ -27,6 +27,7 @@ def generar_excel_cotizacion(data):
     observaciones = data.get('observaciones') or ' '
     pisos = data.get('pisos')
     area = data.get('area')
+    titulos = data.get('titulos', '-')
     cuotas_objetos = data.get('cuotas', [])
 
     ruta_original = get_resource_path(f'docs/{codigo}.xlsx')
@@ -70,6 +71,7 @@ def generar_excel_cotizacion(data):
         hoja.range('B17').value = dni
         hoja.range('B14').value = pisos
         hoja.range('D14').value = area
+        hoja.range('G14').value = titulos or '-'
 
         # --- Observaciones ---
         for i, linea in enumerate(observaciones.split('\n'), start=52):

@@ -9,8 +9,6 @@ export default function FormularioDatosCliente({
   setCliente,
   telefono,
   setTelefono,
-  ubicacion,
-  setUbicacion,
 }) {
   return (
     <CRow className="g-3">
@@ -79,19 +77,6 @@ export default function FormularioDatosCliente({
       </CCol>
 
       {/* --- Ubicación --- */}
-      <CCol md={6}>
-        <CFormLabel htmlFor="ubicacion">
-          Distrito del Predio <span style={{ color: 'red' }}>*</span>
-        </CFormLabel>
-        <CFormInput
-          type="text"
-          name="ubicacion"
-          id="ubicacion"
-          required
-          value={ubicacion}
-          onChange={(e) => setUbicacion(e.target.value)}
-        />
-      </CCol>
     </CRow>
   )
 }

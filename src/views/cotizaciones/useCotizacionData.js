@@ -14,8 +14,8 @@ export default function useCotizacionData() {
   useEffect(() => {
     setLoading(true)
 
-    const fetchCotizaciones = axios.get('http://intranet.planosperu.com.pe/api/tipot/')
-    const fetchUsuarios = axios.get('http://intranet.planosperu.com.pe/api/users/')
+    const fetchCotizaciones = axios.get('https://intranet.planosperu.com.pe/api/tipot/')
+    const fetchUsuarios = axios.get('https://intranet.planosperu.com.pe/api/users/')
 
     Promise.all([fetchCotizaciones, fetchUsuarios])
       .then((responses) => {

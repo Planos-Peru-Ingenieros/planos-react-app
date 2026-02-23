@@ -30,6 +30,7 @@ export default function CrearCotizacion() {
   const [ubicacion, setUbicacion] = useState('')
   const [pisos, setPisos] = useState('')
   const [area, setArea] = useState('')
+  const [titulos, setTitulos] = useState('')
 
   // 5. Estado de las cuotas (calculadas)
   const [montoCuotas, setMontoCuotas] = useState([])
@@ -217,6 +218,7 @@ export default function CrearCotizacion() {
       cuotas: cuotasCombinadas,
       usuario: usuarioSeleccionado,
       codigo: codigoCotizacion,
+      titulos: titulos,
     }
   }
 
@@ -396,8 +398,6 @@ export default function CrearCotizacion() {
               setCliente={setCliente}
               telefono={telefono}
               setTelefono={setTelefono}
-              ubicacion={ubicacion}
-              setUbicacion={setUbicacion}
             />
 
             <FormularioDatosProyecto
@@ -407,6 +407,10 @@ export default function CrearCotizacion() {
               setPisos={setPisos}
               area={area}
               setArea={setArea}
+              ubicacion={ubicacion}
+              setUbicacion={setUbicacion}
+              titulos={titulos}
+              setTitulos={setTitulos}
             />
 
             <FormularioCalculoCuotas
