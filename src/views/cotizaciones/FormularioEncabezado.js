@@ -6,7 +6,7 @@ import { CFormLabel } from '@coreui/react'
 
 export default function FormularioEncabezado({
   usuarios,
-  cotizacion, // A veces puede ser 'undefined' en el primer render
+  cotizacion,
   usuarioSeleccionado,
   handleUsuarioChange,
   cotizacionSeleccionado,
@@ -74,6 +74,7 @@ export default function FormularioEncabezado({
           onChange={handleUsuarioChange}
           placeholder={loading ? 'Cargando...' : 'Seleccione un usuario'}
           isDisabled={loading}
+          required
           inputId="user"
         />
       </div>
@@ -83,6 +84,7 @@ export default function FormularioEncabezado({
           Servicio Solicitado <span style={{ color: 'red' }}>*</span>
         </label>
         <Select
+          required
           options={opcionesCotizacion}
           value={valorCotizacionActual}
           onChange={handleCotizacionChange}

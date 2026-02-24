@@ -12,6 +12,36 @@ export default function FormularioDatosCliente({
 }) {
   return (
     <CRow className="g-3">
+      {/* --- Cliente / Empresa --- */}
+      <CCol md={6}>
+        <CFormLabel htmlFor="cliente">
+          Solicitante (Nombre o Razón Social) <span style={{ color: 'red' }}>*</span>
+        </CFormLabel>
+        <CFormInput
+          type="text"
+          name="cliente"
+          id="cliente"
+          placeholder="Jose..."
+          required
+          value={cliente}
+          onChange={(e) => setCliente(e.target.value)}
+        />
+      </CCol>
+
+      {/* --- Teléfono --- */}
+      <CCol md={6}>
+        <CFormLabel htmlFor="telefono">N° Celular Solicitante</CFormLabel>
+        <CFormInput
+          type="text"
+          name="telefono"
+          id="telefono"
+          value={telefono}
+          placeholder="987..."
+          required
+          onChange={(e) => setTelefono(e.target.value)}
+        />
+      </CCol>
+
       {/* --- DNI / RUC --- */}
       <CCol md={6}>
         <CFormLabel htmlFor="dni">
@@ -48,35 +78,6 @@ export default function FormularioDatosCliente({
           maxLength={11}
         />
       </CCol>
-
-      {/* --- Cliente / Empresa --- */}
-      <CCol md={6}>
-        <CFormLabel htmlFor="cliente">
-          Nombre del Cliente o la Empresa que Representa <span style={{ color: 'red' }}>*</span>
-        </CFormLabel>
-        <CFormInput
-          type="text"
-          name="cliente"
-          id="cliente"
-          required
-          value={cliente}
-          onChange={(e) => setCliente(e.target.value)}
-        />
-      </CCol>
-
-      {/* --- Teléfono --- */}
-      <CCol md={6}>
-        <CFormLabel htmlFor="telefono">N° de Teléfono del Cliente</CFormLabel>
-        <CFormInput
-          type="text"
-          name="telefono"
-          id="telefono"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
-        />
-      </CCol>
-
-      {/* --- Ubicación --- */}
     </CRow>
   )
 }
