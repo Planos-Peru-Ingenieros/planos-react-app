@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { CCardHeader, CForm } from '@coreui/react'
 
 // 1. IMPORTAMOS NUESTROS NUEVOS COMPONENTES Y UTILIDADES
@@ -40,25 +40,40 @@ export default function CrearCotizacion() {
   const [showModal, setShowModal] = useState(false)
   const [showModalJPG, setShowModalJPG] = useState(false)
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   // --- LÓGICA Y EFECTOS ---
 
-  // 7. Efecto que actualiza los 'detalles'
+  // 7. Calcular detalles y observaciones basado en la cotización seleccionada
+  // useMemo evita que se recalcule si cotizaciones cambia de referencia pero mantiene los mismos datos
+
+  const cotizacionActual = useMemo(() => {
+    if (!cotizacionSeleccionado) return null
+    return cotizaciones.find((c) => c.id === cotizacionSeleccionado) || null
+  }, [cotizacionSeleccionado, cotizaciones])
+
+  const hasTitulo = useMemo(() => {
+    if (!cotizacionActual) return false
+    const entidad = cotizacionActual?.entidad?.toLowerCase().trim() || ''
+    return entidad === 'mas solicitado' || entidad === 'sunarp'
+  }, [cotizacionActual])
+
   useEffect(() => {
-    if (!cotizacionSeleccionado) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDetalles('')
-      setObservaciones('')
-      return
+    if (!hasTitulo) {
+      setTitulos('')
+    }
+  }, [hasTitulo])
+
+  const detallesYObservaciones = useMemo(() => {
+    if (!cotizacionActual) {
+      return { detalles: '', observaciones: '' }
     }
 
-    const cot = cotizaciones.find((c) => c.id === cotizacionSeleccionado)
-    if (!cot) return
-
-    let observacionesValue = cot?.observaciones || ''
+    let observacionesValue = cotizacionActual?.observaciones || ''
     let detallesValue = ''
-    switch (cot.tipo) {
+    switch (cotizacionActual.tipo) {
       case 'Planos y Documentos':
-        switch (cot.codigo) {
+        switch (cotizacionActual.codigo) {
           case 'DEC-FAB':
             detallesValue =
               'Se elaborarán planos y documentos para el saneamiento del inmueble, sin cargas técnicas bajo la normativa vigente de Registros Públicos.'
@@ -85,7 +100,7 @@ export default function CrearCotizacion() {
         }
         break
       case 'Documentos':
-        switch (cot.codigo) {
+        switch (cotizacionActual.codigo) {
           case 'LEV-CAR':
             detallesValue =
               'Se elaborarán formularios y documentos para el sustento legal del levantamiento de cargas del inmueble, bajo la normativa vigente de Registros Públicos.'
@@ -99,9 +114,14 @@ export default function CrearCotizacion() {
         detallesValue = ''
         break
     }
-    setDetalles(detallesValue)
-    setObservaciones(observacionesValue)
-  }, [cotizacionSeleccionado, cotizaciones])
+    return { detalles: detallesValue, observaciones: observacionesValue }
+  }, [cotizacionActual])
+
+  // 7. Actualizar estado cuando cambian los detalles y observaciones calculados
+  useEffect(() => {
+    setDetalles(detallesYObservaciones.detalles)
+    setObservaciones(detallesYObservaciones.observaciones)
+  }, [detallesYObservaciones])
 
   // 8. Efecto que RE-CALCULA LAS CUOTAS
   useEffect(() => {
@@ -225,6 +245,7 @@ export default function CrearCotizacion() {
   // 11. Handlers para generar los archivos
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     const datos = construirDatosParaBackend()
     try {
       // Ajusta la IP si no es localhost (Aqui cabiar la url para la intranet)
@@ -257,6 +278,7 @@ export default function CrearCotizacion() {
       if (!response.ok) {
         const errorText = await response.text()
         alert(`Error al generar el archivo Excel: ${errorText}`)
+        setIsSubmitting(false)
         return
       }
 
@@ -290,77 +312,92 @@ export default function CrearCotizacion() {
     } catch (error) {
       console.error('Error en servicio de Excel:', error)
       alert('Error al conectar con el generador de Excel (Puerto 5000).')
+      setIsSubmitting(false)
     }
   }
   const handleGeneratePDF = async () => {
     const datos = construirDatosParaBackend()
 
-    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion-pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datos),
-    })
+    try {
+      const response = await fetch('http://127.0.0.1:5000/crear-cotizacion-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      })
 
-    if (!response.ok) {
-      alert(`Error al generar el PDF: ${await response.text()}`)
-      return
+      if (!response.ok) {
+        alert(`Error al generar el PDF: ${await response.text()}`)
+        setIsSubmitting(false)
+        return
+      }
+
+      const pdfBlob = await response.blob()
+      const url = window.URL.createObjectURL(pdfBlob)
+      const hoy = new Date()
+      const anio = hoy.getFullYear()
+      const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+      const dia = String(hoy.getDate()).padStart(2, '0')
+      const mes_dia = `${mes}${dia}`
+      const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
+      const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+      const cliente_limpio = limpiar(datos.cliente || 'Cliente')
+      const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
+      const nombreArchivoPDF = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.pdf`
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = nombreArchivoPDF
+      a.click()
+
+      setShowModal(false)
+      setShowModalJPG(true)
+    } catch (error) {
+      console.error('Error al generar PDF:', error)
+      alert('Error al generar PDF')
+      setIsSubmitting(false)
     }
-
-    const pdfBlob = await response.blob()
-    const url = window.URL.createObjectURL(pdfBlob)
-    const hoy = new Date()
-    const anio = hoy.getFullYear()
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
-    const dia = String(hoy.getDate()).padStart(2, '0')
-    const mes_dia = `${mes}${dia}`
-    const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
-    const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
-    const cliente_limpio = limpiar(datos.cliente || 'Cliente')
-    const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
-    const nombreArchivoPDF = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.pdf`
-
-    const a = document.createElement('a')
-    a.href = url
-    a.download = nombreArchivoPDF
-    a.click()
-
-    setShowModal(false)
-    setShowModalJPG(true)
   }
 
   const handleGenerateJPG = async () => {
     const datos = construirDatosParaBackend()
+    try {
+      const response = await fetch('http://127.0.0.1:5000/crear-cotizacion-jpg', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      })
 
-    const response = await fetch('http://127.0.0.1:5000/crear-cotizacion-jpg', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datos),
-    })
+      if (!response.ok) {
+        alert(`Error al generar el JPG: ${await response.text()}`)
+        setIsSubmitting(false)
+        return
+      }
 
-    if (!response.ok) {
-      alert(`Error al generar el JPG: ${await response.text()}`)
-      return
+      const jpgBlob = await response.blob()
+      const url = window.URL.createObjectURL(jpgBlob)
+      const hoy = new Date()
+      const anio = hoy.getFullYear()
+      const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+      const dia = String(hoy.getDate()).padStart(2, '0')
+      const mes_dia = `${mes}${dia}`
+      const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
+      const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
+      const cliente_limpio = limpiar(datos.cliente || 'Cliente')
+      const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
+      const nombreArchivoJPG = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.jpg`
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = nombreArchivoJPG
+      a.click()
+
+      setShowModalJPG(false)
+      setIsSubmitting(false)
+    } catch (error) {
+      console.error('Error al generar JPG:', error)
+      alert('Error al generar JPG')
+      setIsSubmitting(false)
     }
-
-    const jpgBlob = await response.blob()
-    const url = window.URL.createObjectURL(jpgBlob)
-    const hoy = new Date()
-    const anio = hoy.getFullYear()
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
-    const dia = String(hoy.getDate()).padStart(2, '0')
-    const mes_dia = `${mes}${dia}`
-    const abreviado_usuario = (datos.usuario.slice(0, 3) || 'USR').toUpperCase()
-    const limpiar = (texto) => texto.replace(/[^a-zA-Z0-9_-]/g, '').replace(/\s+/g, '_')
-    const cliente_limpio = limpiar(datos.cliente || 'Cliente')
-    const ubicacion_limpia = limpiar(datos.ubicacion || 'Ubicacion')
-    const nombreArchivoJPG = `CZ-${anio}-${mes_dia}-${abreviado_usuario}-${datos.codigo}-${cliente_limpio}-${ubicacion_limpia}.jpg`
-
-    const a = document.createElement('a')
-    a.href = url
-    a.download = nombreArchivoJPG
-    a.click()
-
-    setShowModalJPG(false)
   }
 
   // 12. Handlers de los modales (SIN CAMBIOS)
@@ -370,6 +407,7 @@ export default function CrearCotizacion() {
   }
   const handleCancel1 = () => {
     setShowModalJPG(false)
+    setIsSubmitting(false)
   }
 
   // --- RENDERIZADO ---
@@ -383,12 +421,12 @@ export default function CrearCotizacion() {
           <CForm onSubmit={handleSubmit}>
             <FormularioEncabezado
               usuarios={usuarios}
-              cotizacion={cotizaciones} // OK: Plural
+              cotizacion={cotizaciones}
               usuarioSeleccionado={usuarioSeleccionado}
               handleUsuarioChange={handleUsuarioChange}
               cotizacionSeleccionado={cotizacionSeleccionado}
               handleCotizacionChange={handleCotizacionChange}
-              loading={loading}
+              loading={loading || isSubmitting}
             />
 
             <FormularioDatosCliente
@@ -411,6 +449,7 @@ export default function CrearCotizacion() {
               setUbicacion={setUbicacion}
               titulos={titulos}
               setTitulos={setTitulos}
+              hasTitulo={hasTitulo}
             />
 
             <FormularioCalculoCuotas
@@ -430,12 +469,16 @@ export default function CrearCotizacion() {
                 name="observaciones"
                 rows="3"
                 value={observaciones || ''}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.preventDefault()
+                }}
                 onChange={(e) => setObservaciones(e.target.value)}
+                disabled={isSubmitting}
               ></textarea>
             </div>
 
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              Crear Cotización
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? 'Procesando...' : 'Crear Cotización'}
             </button>
           </CForm>
 
