@@ -30,8 +30,15 @@ export default function FormularioDatosProyecto({
           onKeyDown={(e) => {
             if (e.key === 'Enter') e.preventDefault()
           }}
-          onChange={(e) => setDetalles(e.target.value)}
+          onChange={(e) => {
+            setDetalles(e.target.value)
+          }}
+          onBlur={(e) => {
+            const newText = e.target.value.trim().replaceAll(/\s+/g, ' ')
+            setDetalles(newText)
+          }}
           required
+          maxLength={225}
         ></CFormTextarea>
       </CCol>
 
@@ -47,7 +54,11 @@ export default function FormularioDatosProyecto({
           placeholder="3..."
           required
           value={pisos}
-          onChange={(e) => setPisos(e.target.value)}
+          onChange={(e) => {
+            if (/^\d{0,2}$/.test(e.target.value)) {
+              setPisos(e.target.value)
+            }
+          }}
         />
       </CCol>
 
@@ -64,7 +75,7 @@ export default function FormularioDatosProyecto({
           required
           value={area}
           onChange={(e) => {
-            if (/^\d*$/.test(e.target.value)) return setArea(e.target.value)
+            if (/^\d{0,6}$/.test(e.target.value)) return setArea(e.target.value)
           }}
         />
       </CCol>
@@ -86,14 +97,18 @@ export default function FormularioDatosProyecto({
 
       {hasTitulo && (
         <CCol md={6}>
-          <CFormLabel htmlFor="titulos">Titulos</CFormLabel>
+          <CFormLabel htmlFor="titulos">N° Titulos (Independizar o Subdividir)</CFormLabel>
           <CFormInput
             type="text"
             name="titulos"
             id="titulos"
             value={titulos}
             placeholder="-"
-            onChange={(e) => setTitulos(e.target.value)}
+            onChange={(e) => {
+              if (/^\d{0,3}$/.test(e.target.value)) {
+                setTitulos(e.target.value)
+              }
+            }}
           />
         </CCol>
       )}

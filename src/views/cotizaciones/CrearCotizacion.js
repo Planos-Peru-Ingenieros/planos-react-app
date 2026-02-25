@@ -194,7 +194,7 @@ export default function CrearCotizacion() {
   }
 
   const handleMontoTotalChange = (e) => {
-    if (/^\d*$/.test(e.target.value)) {
+    if (/^\d{0,5}$/.test(e.target.value)) {
       setMontoTotal(e.target.value)
     }
   }
@@ -473,6 +473,10 @@ export default function CrearCotizacion() {
                   if (e.key === 'Enter') e.preventDefault()
                 }}
                 onChange={(e) => setObservaciones(e.target.value)}
+                onBlur={(e) => {
+                  const newText = e.target.value.trim().replaceAll(/\s+/g, ' ')
+                  setObservaciones(newText)
+                }}
                 disabled={isSubmitting}
               ></textarea>
             </div>

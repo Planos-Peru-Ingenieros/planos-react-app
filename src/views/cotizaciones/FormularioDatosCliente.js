@@ -37,7 +37,6 @@ export default function FormularioDatosCliente({
           id="telefono"
           value={telefono}
           placeholder="987..."
-          required
           onChange={(e) => setTelefono(e.target.value)}
         />
       </CCol>
