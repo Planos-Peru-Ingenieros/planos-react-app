@@ -1,43 +1,142 @@
-import React, { useEffect, useRef } from 'react'
+import { useState } from 'react'
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
+import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 
-import { CChartLine } from '@coreui/react-chartjs'
-import { getStyle } from '@coreui/utils'
+const columns = [
+  { accessorKey: 'id', header: 'ID' },
+  { accessorKey: 'nombre', header: 'Nombre / Razón Social' },
+  { accessorKey: 'titulo', header: 'Título' },
+  { accessorKey: 'cliente', header: 'Cliente' },
+  // Agrega más si quieres: 'total', 'fecha', 'estado', 'ubicacion', etc.
+]
 
-const MainChart = () => {
-  const chartRef = useRef(null)
+function CotizacionesTable() {
+  const [pagination, setPagination] = useState({
+    pageIndex: 0, // ← importante: empieza en 0
+    pageSize: 10,
+  })
 
-  useEffect(() => {
-    const handleColorSchemeChange = () => {
-      if (chartRef.current) {
-        setTimeout(() => {
-          chartRef.current.options.scales.x.grid.borderColor = getStyle(
-            '--cui-border-color-translucent',
-          )
-          chartRef.current.options.scales.x.grid.color = getStyle('--cui-border-color-translucent')
-          chartRef.current.options.scales.x.ticks.color = getStyle('--cui-body-color')
-          chartRef.current.options.scales.y.grid.borderColor = getStyle(
-            '--cui-border-color-translucent',
-          )
-          chartRef.current.options.scales.y.grid.color = getStyle('--cui-border-color-translucent')
-          chartRef.current.options.scales.y.ticks.color = getStyle('--cui-body-color')
-          chartRef.current.update()
-        })
+  const [sorting, setSorting] = useState([])
+
+  const [globalFilter, setGlobalFilter] = useState('')
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['cotizaciones', pagination.pageIndex, pagination.pageSize, globalFilter, sorting],
+    queryFn: async () => {
+      const start = pagination.pageIndex * pagination.pageSize
+      const params = new URLSearchParams({
+        format: 'datatables',
+        draw: pagination.pageIndex + 1,
+        start: start.toString(),
+        length: pagination.pageSize.toString(),
+      })
+
+      if (globalFilter) {
+        params.append('search[value]', globalFilter)
       }
-    }
 
-    document.documentElement.addEventListener('ColorSchemeChange', handleColorSchemeChange)
-    return () =>
-      document.documentElement.removeEventListener('ColorSchemeChange', handleColorSchemeChange)
-  }, [chartRef])
+      if (sorting.length > 0) {
+        const sort = sorting[0]
+        params.append('order[0][column]', sort.id)
+        params.append('order[0][dir]', sort.desc ? 'desc' : 'asc')
+      }
 
-  const random = (min = 0, max = 100) => Math.floor(Math.random() * (max - min + 1)) + min
+      console.log('📌 Parámetros:', params.toString())
+
+      const res = await axios.get('https://intranet.planosperu.com.pe/api/cotizaciones/', {
+        params: params,
+      })
+
+      console.log('📦 Respuesta - Registros:', res.data.data?.length, 'Start enviado:', start)
+
+      return {
+        data: res.data.data || [],
+        recordsTotal: res.data.recordsTotal,
+        recordsFiltered: res.data.recordsFiltered,
+      }
+    },
+    keepPreviousData: true,
+  })
+
+  const table = useReactTable({
+    data: data?.data ?? [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    manualSorting: true,
+    manualFiltering: true,
+    rowCount: data?.recordsFiltered ?? 0, // ← clave para que "Siguiente" se habilite
+    state: {
+      pagination,
+      sorting,
+      globalFilter,
+    },
+    onPaginationChange: setPagination,
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+  })
 
   return (
-    <>
-      <h1>asdf</h1>
-      <h1></h1>
-    </>
+    <div>
+      <input
+        value={globalFilter ?? ''}
+        onChange={(e) => setGlobalFilter(e.target.value)}
+        placeholder="Buscar..."
+        style={{ marginBottom: '1rem', padding: '8px', width: '300px' }}
+      />
+
+      {isLoading ? (
+        <p>Cargando cotizaciones...</p>
+      ) : table.getRowModel().rows.length === 0 ? (
+        <p>No se encontraron resultados</p>
+      ) : (
+        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    style={{ border: '1px solid #ddd', padding: '8px', background: '#f4f4f4' }}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+          Anterior
+        </button>
+
+        <span>
+          Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount() || '?'}
+        </span>
+
+        <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+          Siguiente
+        </button>
+      </div>
+    </div>
   )
 }
 
-export default MainChart
+export default CotizacionesTable
