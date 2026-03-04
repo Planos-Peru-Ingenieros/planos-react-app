@@ -73,6 +73,7 @@ def iniciar_agente_hilo(agregar_log_func):
                 resultado = consultar_estado_sunarp(anio, titulo, oficina)
                 nuevo_estado_raw = resultado.get("estado", "Error")
                 fecha_vencimiento = resultado.get("vencimiento", "")
+                presentante = resultado.get("presentante", "")
 
                 if nuevo_estado_raw and "Error" not in nuevo_estado_raw:
                     nuevo_estado = nuevo_estado_raw.strip().upper()
@@ -87,10 +88,11 @@ def iniciar_agente_hilo(agregar_log_func):
                     try:
                         requests.post(f"{URL_BASE}/api/robot/guardar/",
                                       json={
-                                          "id": tarea['id'], 
+                                          "id": tarea['id'],
                                           "estado": nuevo_estado,
-                                          "vencimiento": fecha_vencimiento 
-                                      })
+                                          "vencimiento": fecha_vencimiento,
+                                          "presentante": presentante
+                        }, timeout=10)
                     except Exception as e:
                         print(f"Error enviando datos al backend: {e}")
 
@@ -108,7 +110,8 @@ def iniciar_agente_hilo(agregar_log_func):
             enviar_email_final(URL_BASE, logs_ordenados)
 
         else:
-            log_interno(f"❌ Error API Pendientes: {resp.status_code}", "danger")
+            log_interno(
+                f"❌ Error API Pendientes: {resp.status_code}", "danger")
             enviar_email_final(URL_BASE, logs_importantes)
 
     except Exception as e:

@@ -70,6 +70,8 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
         time.sleep(2)
         valor_final = res.get_attribute('value')
         fecha_vencimiento = ""
+        presentante = driver.find_element(
+            By.ID, "nombrePresentante").get_attribute('value')
         try:
             input_fecha = driver.find_element(By.ID, "fechaVencimiento")
             fecha_vencimiento = input_fecha.get_attribute(
@@ -79,7 +81,8 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
 
         return {
             "estado": valor_final if valor_final else "Sin Estado",
-            "vencimiento": fecha_vencimiento
+            "vencimiento": fecha_vencimiento,
+            "presentante": presentante if presentante else ""
         }
 
     except Exception as e:
