@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   CAvatar,
   CButton,
@@ -26,6 +25,7 @@ import {
 } from '@coreui/icons'
 
 import MainCotizaciones from './MainCotizaciones'
+import Testito from './Testito'
 
 const Dashboard = () => {
   const tableExample = [
@@ -57,6 +57,7 @@ const Dashboard = () => {
             </CCol>
           </CRow>
           <MainCotizaciones />
+          {/* <Testito /> */}
         </CCardBody>
       </CCard>
     </>

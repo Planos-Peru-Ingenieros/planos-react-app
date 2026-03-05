@@ -2,27 +2,39 @@ import { useState } from 'react'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
+import useDebounce from './hooks/useDebounce'
 
 const columns = [
   { accessorKey: 'id', header: 'ID' },
-  { accessorKey: 'nombre', header: 'Nombre / Razón Social' },
-  { accessorKey: 'titulo', header: 'Título' },
+  { accessorKey: 'nombre', header: 'Nombre del Proyecto' },
   { accessorKey: 'cliente', header: 'Cliente' },
-  // Agrega más si quieres: 'total', 'fecha', 'estado', 'ubicacion', etc.
+  { accessorKey: 'telefono', header: 'Telefono' },
+  { accessorKey: 'total', header: 'Total' },
+  { accessorKey: 'ubicacion', header: 'Distrito' },
+  {
+    id: 'username',
+    header: 'Cotizador (creador)',
+    accessorFn: (row) => row.user?.username || '-',
+  },
+  { accessorKey: 'fecha', header: 'Fecha' },
 ]
 
 function CotizacionesTable() {
   const [pagination, setPagination] = useState({
-    pageIndex: 0, // ← importante: empieza en 0
-    pageSize: 10,
+    pageIndex: 0,
+    pageSize: 50,
   })
 
   const [sorting, setSorting] = useState([])
+  const [searchValue, setSearchValue] = useState('')
+  const debouncedSearch = useDebounce(searchValue, 500)
 
-  const [globalFilter, setGlobalFilter] = useState('')
+  function handleChangePageSize(e) {
+    setPagination((prev) => ({ ...prev, pageSize: e.target.value }))
+  }
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['cotizaciones', pagination.pageIndex, pagination.pageSize, globalFilter, sorting],
+    queryKey: ['cotizaciones', pagination.pageIndex, pagination.pageSize, debouncedSearch, sorting],
     queryFn: async () => {
       const start = pagination.pageIndex * pagination.pageSize
       const params = new URLSearchParams({
@@ -32,8 +44,8 @@ function CotizacionesTable() {
         length: pagination.pageSize.toString(),
       })
 
-      if (globalFilter) {
-        params.append('search[value]', globalFilter)
+      if (debouncedSearch) {
+        params.append('search[value]', debouncedSearch)
       }
 
       if (sorting.length > 0) {
@@ -45,10 +57,10 @@ function CotizacionesTable() {
       console.log('📌 Parámetros:', params.toString())
 
       const res = await axios.get('https://intranet.planosperu.com.pe/api/cotizaciones/', {
-        params: params,
+        params,
       })
 
-      console.log('📦 Respuesta - Registros:', res.data.data?.length, 'Start enviado:', start)
+      console.log('📦 Registros:', res.data.data?.length, 'Start:', start)
 
       return {
         data: res.data.data || [],
@@ -66,25 +78,31 @@ function CotizacionesTable() {
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,
-    rowCount: data?.recordsFiltered ?? 0, // ← clave para que "Siguiente" se habilite
+    rowCount: data?.recordsFiltered ?? 0,
     state: {
       pagination,
       sorting,
-      globalFilter,
+      globalFilter: debouncedSearch,
     },
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
   })
 
   return (
     <div>
       <input
-        value={globalFilter ?? ''}
-        onChange={(e) => setGlobalFilter(e.target.value)}
+        value={searchValue}
+        onChange={(e) => setSearchValue(e.target.value)}
         placeholder="Buscar..."
         style={{ marginBottom: '1rem', padding: '8px', width: '300px' }}
       />
+
+      <select onChange={(e) => handleChangePageSize(e)} value={pagination.pageSize}>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
 
       {isLoading ? (
         <p>Cargando cotizaciones...</p>
@@ -122,15 +140,14 @@ function CotizacionesTable() {
         </table>
       )}
 
+      {/* Paginación igual */}
       <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
           Anterior
         </button>
-
         <span>
           Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount() || '?'}
         </span>
-
         <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
           Siguiente
         </button>
