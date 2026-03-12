@@ -80,7 +80,7 @@ export default function CrearCotizacion() {
             break
           case 'DEC-IND':
             detallesValue =
-              'Se elaborarán planos y documentos para el saneamiento del inmueble e independencia, sin cargas técnicas bajo la normativa vigente de Registros Públicos.'
+              'Se elaborarán planos y documentos para el saneamiento del inmueble e independización, sin cargas técnicas bajo la normativa vigente de Registros Públicos.'
             break
           case 'DEC-SUB':
             detallesValue =
