@@ -3,6 +3,7 @@ import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-tabl
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import useDebounce from './hooks/useDebounce'
+import { useCotizaciones } from './hooks/useCotizaciones'
 
 const columns = [
   { accessorKey: 'id', header: 'ID' },
@@ -38,14 +39,12 @@ function CotizacionesTable() {
     queryFn: async () => {
       const start = pagination.pageIndex * pagination.pageSize
       const params = new URLSearchParams({
-        format: 'datatables',
-        draw: pagination.pageIndex + 1,
-        start: start.toString(),
-        length: pagination.pageSize.toString(),
+        limit: pagination.pageSize.toString(),
+        offset: start,
       })
 
       if (debouncedSearch) {
-        params.append('search[value]', debouncedSearch)
+        params.append('search', debouncedSearch)
       }
 
       if (sorting.length > 0) {
@@ -56,16 +55,16 @@ function CotizacionesTable() {
 
       console.log('📌 Parámetros:', params.toString())
 
-      const res = await axios.get('https://intranet.planosperu.com.pe/api/cotizaciones/', {
+      const res = await axios.get('http://localhost:8000/api/cotizaciones/', {
         params,
       })
 
-      console.log('📦 Registros:', res.data.data?.length, 'Start:', start)
+      console.log('📦 Registros:', res.data.results?.length, 'Start:', start)
 
       return {
-        data: res.data.data || [],
-        recordsTotal: res.data.recordsTotal,
-        recordsFiltered: res.data.recordsFiltered,
+        data: res.data?.results || [],
+        recordsTotal: res.data.resultsrecordsTotal,
+        recordsFiltered: res.data.results.recordsFiltered,
       }
     },
     keepPreviousData: true,
