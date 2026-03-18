@@ -249,14 +249,11 @@ export default function CrearCotizacion() {
     const datos = construirDatosParaBackend()
     try {
       // Ajusta la IP si no es localhost (Aqui cabiar la url para la intranet)
-      const responseBD = await fetch(
-        'https://intranet.planosperu.com.pe/api/cotizaciones/guardar/',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(datos),
-        },
-      )
+      const responseBD = await fetch('https://intranet.planosperu.com.pe/api/cotizaciones/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      })
 
       if (responseBD.ok) {
         console.log('✅ Cotización guardada en BD correctamente')
