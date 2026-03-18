@@ -9,6 +9,7 @@ import FormularioDatosCliente from './FormularioDatosCliente'
 import FormularioDatosProyecto from './FormularioDatosProyecto'
 import FormularioCalculoCuotas from './FormularioCalculoCuotas'
 import ConfirmacionModals from './ConfirmacionModals'
+import { useCharacterCount } from './hooks/useCharacterCount'
 
 export default function CrearCotizacion() {
   // --- ESTADO PRINCIPAL ---
@@ -42,6 +43,8 @@ export default function CrearCotizacion() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const obsCounter = useCharacterCount(observaciones, 255)
+
   // --- LÓGICA Y EFECTOS ---
 
   // 7. Calcular detalles y observaciones basado en la cotización seleccionada
@@ -56,6 +59,12 @@ export default function CrearCotizacion() {
     if (!cotizacionActual) return false
     const entidad = cotizacionActual?.entidad?.toLowerCase().trim() || ''
     return entidad === 'mas solicitado' || entidad === 'sunarp'
+  }, [cotizacionActual])
+
+  const isDisabled = useMemo(() => {
+    if (!cotizacionActual) return false
+    const entidad = cotizacionActual?.entidad?.toLowerCase().trim() || ''
+    return entidad === 'mas solicitado'
   }, [cotizacionActual])
 
   useEffect(() => {
@@ -447,6 +456,7 @@ export default function CrearCotizacion() {
               titulos={titulos}
               setTitulos={setTitulos}
               hasTitulo={hasTitulo}
+              isDisabled={isDisabled}
             />
 
             <FormularioCalculoCuotas
@@ -464,6 +474,7 @@ export default function CrearCotizacion() {
                 className="form-control"
                 id="observaciones"
                 name="observaciones"
+                maxLength={255}
                 rows="3"
                 value={observaciones || ''}
                 onKeyDown={(e) => {
@@ -476,6 +487,11 @@ export default function CrearCotizacion() {
                 }}
                 disabled={isSubmitting}
               ></textarea>
+              <small
+                className={`form-text float-end ${obsCounter.isNearLimit ? 'text-danger' : 'text-muted'}`}
+              >
+                {obsCounter.count} / 255
+              </small>
             </div>
 
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>

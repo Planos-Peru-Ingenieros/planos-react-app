@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { CFormLabel, CFormInput, CFormTextarea, CRow, CCol } from '@coreui/react'
+import { useCharacterCount } from './hooks/useCharacterCount'
 
 // Componente presentacional para los datos del proyecto
 export default function FormularioDatosProyecto({
@@ -14,7 +15,10 @@ export default function FormularioDatosProyecto({
   titulos,
   setTitulos,
   hasTitulo,
+  isDisabled,
 }) {
+  const detCounter = useCharacterCount(detalles, 225)
+
   return (
     <CRow className="g-3">
       {/* --- Detalles --- */}
@@ -39,7 +43,13 @@ export default function FormularioDatosProyecto({
           }}
           required
           maxLength={225}
+          disabled={isDisabled}
         ></CFormTextarea>
+        <small
+          className={`form-text float-end ${detCounter.isNearLimit ? 'text-danger' : 'text-muted'}`}
+        >
+          {detCounter.count} / 225
+        </small>
       </CCol>
 
       {/* --- Número de Pisos --- */}
