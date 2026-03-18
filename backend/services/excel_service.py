@@ -1,16 +1,19 @@
 import os
 import tempfile
+import textwrap
 import traceback
 import io  # <--- Nuevo: Para manejar el archivo en memoria
 from datetime import datetime
 import xlwings as xw
 import fitz  # PyMuPDF
-from openpyxl import load_workbook # <--- Nuevo: Para editar el Formulario Registral
+# <--- Nuevo: Para editar el Formulario Registral
+from openpyxl import load_workbook
 from utils import get_resource_path
 
 # ==============================================================================
 #  LÓGICA DE COTIZACIONES (Tu código original con xlwings)
 # ==============================================================================
+
 
 def generar_excel_cotizacion(data):
     """
@@ -31,9 +34,10 @@ def generar_excel_cotizacion(data):
     cuotas_objetos = data.get('cuotas', [])
 
     ruta_original = get_resource_path(f'docs/{codigo}.xlsx')
-    
+
     if not os.path.exists(ruta_original):
-        raise FileNotFoundError(f'El archivo "{codigo}" no existe en: {ruta_original}')
+        raise FileNotFoundError(
+            f'El archivo "{codigo}" no existe en: {ruta_original}')
 
     app_excel = xw.App(visible=False)
     try:
@@ -74,15 +78,22 @@ def generar_excel_cotizacion(data):
         hoja.range('G14').value = titulos or '-'
 
         # --- Observaciones ---
-        for i, linea in enumerate(observaciones.split('\n'), start=52):
-            if i > 54: break
-            hoja.range(f'C{i}').value = linea
+        primera_linea = textwrap.wrap(observaciones, width=90)
+        resto = textwrap.wrap(
+            observaciones[len(primera_linea[0]):].strip(), width=115)
+
+        lineas = [primera_linea[0]] + resto[:2]
+
+        celdas_obs = ['C52', 'B53', 'B54']
+        for i in range(min(3, len(lineas))):
+            hoja.range(celdas_obs[i]).value = lineas[i]
 
         # --- Cuotas ---
         celdas_cuotas = ['C61', 'C62', 'C63', 'C64']
         celdas_fechas = ['G61', 'G62', 'G63', 'G64']
         for i, cuota_obj in enumerate(cuotas_objetos):
-            if i >= len(celdas_cuotas): break
+            if i >= len(celdas_cuotas):
+                break
             hoja.range(celdas_cuotas[i]).value = cuota_obj.get('monto')
             hoja.range(celdas_fechas[i]).value = cuota_obj.get('fecha')
 
@@ -91,8 +102,9 @@ def generar_excel_cotizacion(data):
         anio = hoy.strftime("%Y")
         mes_dia = hoy.strftime("%m%d")
         abreviado_usuario = (usuario[:3] if usuario else 'USR').upper()
-        
-        hoja.range('E19').value = f"CZ-{anio}-{mes_dia}-{abreviado_usuario}-{codigo}"
+
+        hoja.range(
+            'E19').value = f"CZ-{anio}-{mes_dia}-{abreviado_usuario}-{codigo}"
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
             ruta_salida = temp_file.name
@@ -102,10 +114,12 @@ def generar_excel_cotizacion(data):
         return ruta_salida
     except Exception as e:
         # Asegurar que Excel se cierre si hay error
-        if 'wb' in locals(): wb.close()
+        if 'wb' in locals():
+            wb.close()
         raise e
     finally:
         app_excel.quit()
+
 
 def convertir_xlsx_a_pdf(ruta_xlsx):
     """Convierte un Excel dado a PDF y retorna la ruta del PDF"""
@@ -119,6 +133,7 @@ def convertir_xlsx_a_pdf(ruta_xlsx):
         return ruta_pdf
     finally:
         app_excel.quit()
+
 
 def convertir_pdf_a_jpg(ruta_pdf):
     """Convierte la primera página de un PDF a JPG"""
@@ -137,26 +152,29 @@ def convertir_pdf_a_jpg(ruta_pdf):
 # ==============================================================================
 #  NUEVA LÓGICA: FORMULARIO REGISTRAL (Usando xlwings para macros)
 # ==============================================================================
+
+
 def generar_excel_formulario_registral(data):
     """
     Rellena el Formulario Registral usando xlwings para preservar las macros.
     Retorna un objeto BytesIO (archivo en memoria).
     """
     ruta_plantilla = get_resource_path('docs/Formulario1.1.1..xltm')
-    
+
     if not os.path.exists(ruta_plantilla):
-        raise FileNotFoundError(f'No se encuentra la plantilla en: {ruta_plantilla}')
+        raise FileNotFoundError(
+            f'No se encuentra la plantilla en: {ruta_plantilla}')
 
     # Iniciar Excel y abrir la plantilla
     app_excel = xw.App(visible=False)
     try:
         # Abrimos la plantilla
         wb = app_excel.books.open(ruta_plantilla)
-        
+
         # Seleccionamos la hoja DATOS
         if 'DATOS' not in [s.name for s in wb.sheets]:
-             raise ValueError("La plantilla no tiene una hoja llamada 'DATOS'")
-             
+            raise ValueError("La plantilla no tiene una hoja llamada 'DATOS'")
+
         ws = wb.sheets['DATOS']
 
         # --- Llenado de Campos Simples ---
@@ -168,13 +186,13 @@ def generar_excel_formulario_registral(data):
         ws.range('E10').value = data.get('domicilio', '')      # Domicilio
 
         # --- Llenado de Lista Larga (Ej: Fila 20 en adelante) ---
-        lista_items = data.get('lista_datos', []) 
-        fila_inicio = 20 
-        
+        lista_items = data.get('lista_datos', [])
+        fila_inicio = 20
+
         for i, item in enumerate(lista_items):
             fila_actual = fila_inicio + i
             # Ajusta las columnas A, B, C según corresponda en tu hoja DATOS
-            ws.range(f'A{fila_actual}').value = item.get('columna1', '') 
+            ws.range(f'A{fila_actual}').value = item.get('columna1', '')
             ws.range(f'B{fila_actual}').value = item.get('columna2', '')
 
         # Guardar en un archivo temporal en disco (necesario para xlwings)
@@ -184,19 +202,20 @@ def generar_excel_formulario_registral(data):
         # Guardamos el archivo con el formato .xlsm (macro)
         wb.save(ruta_salida)
         wb.close()
-        
+
         # Leemos el archivo guardado en disco a un objeto en memoria (BytesIO)
         # Esto es lo que FastAPI necesita para enviarlo
         with open(ruta_salida, 'rb') as f:
             output = io.BytesIO(f.read())
-        
+
         # Limpiar el archivo temporal del disco
         os.unlink(ruta_salida)
 
         return output
-        
+
     except Exception as e:
-        if 'wb' in locals(): wb.close()
+        if 'wb' in locals():
+            wb.close()
         raise e
     finally:
         app_excel.quit()
