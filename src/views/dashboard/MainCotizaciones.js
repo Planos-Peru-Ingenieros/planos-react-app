@@ -77,7 +77,7 @@ function CotizacionesTable() {
         params.append('fecha_inicio', debouncedDateRange.fecha_inicio)
       if (debouncedDateRange.fecha_fin) params.append('fecha_fin', debouncedDateRange.fecha_fin)
 
-      const res = await axios.get('http://localhost:8000/api/cotizaciones/', {
+      const res = await axios.get('https://intranet.planosperu.com.pe/api/cotizaciones/', {
         params,
       })
       return {
