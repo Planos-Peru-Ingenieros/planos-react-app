@@ -85,7 +85,7 @@ export default function FormularioDatosProyecto({
           required
           value={area}
           onChange={(e) => {
-            if (/^\d{0,6}$/.test(e.target.value)) return setArea(e.target.value)
+            if (/^\d{0,6}(\.\d{0,2})?$/.test(e.target.value)) return setArea(e.target.value)
           }}
         />
       </CCol>
