@@ -78,11 +78,14 @@ def generar_excel_cotizacion(data):
         hoja.range('G14').value = titulos or '-'
 
         # --- Observaciones ---
-        primera_linea = textwrap.wrap(observaciones, width=90)
-        resto = textwrap.wrap(
-            observaciones[len(primera_linea[0]):].strip(), width=115)
-
-        lineas = [primera_linea[0]] + resto[:2]
+        observaciones_limpio = observaciones.strip() if observaciones else ''
+        if observaciones_limpio:
+            primera_linea = textwrap.wrap(observaciones_limpio, width=85)
+            resto = textwrap.wrap(
+                observaciones_limpio[len(primera_linea[0]):].strip(), width=115)
+            lineas = [primera_linea[0]] + resto[:2]
+        else:
+            lineas = []
 
         celdas_obs = ['C52', 'B53', 'B54']
         for i in range(min(3, len(lineas))):

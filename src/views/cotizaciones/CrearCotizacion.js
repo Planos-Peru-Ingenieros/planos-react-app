@@ -230,6 +230,9 @@ export default function CrearCotizacion() {
       }
     })
 
+    // Asegurar que observaciones tenga un valor válido (mínimo un espacio)
+    const obsValida = observaciones && observaciones.trim() ? observaciones : ' '
+
     // Construimos el objeto final con la estructura que pediste
     return {
       nombre: selectedCotizacion ? selectedCotizacion.nom_tipo : 'Proyecto',
@@ -243,7 +246,7 @@ export default function CrearCotizacion() {
       ubicacion: ubicacion,
       telefono: telefono,
       dni: dni,
-      observaciones: observaciones,
+      observaciones: obsValida,
       cuotas: cuotasCombinadas,
       usuario: usuarioSeleccionado,
       codigo: codigoCotizacion,
