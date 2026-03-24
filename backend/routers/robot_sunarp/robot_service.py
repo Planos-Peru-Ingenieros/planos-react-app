@@ -81,12 +81,11 @@ def iniciar_agente_hilo(agregar_log_func):
                         detalle = f"OT: {ot_visible} ({titulo}) -> CAMBIÓ A: {nuevo_estado} (Vence: {fecha_vencimiento})"
                         log_interno(detalle, "success", es_importante=True)
                     try:
-                        requests.post(f"{URL_BASE}/api/robot/guardar/",
-                                      json={
-                                          "id": exp['id'],
-                                          "estado": nuevo_estado,
-                                          "vencimiento": fecha_vencimiento,
-                                          "presentante": presentante
+                        requests.patch(f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/",
+                                       json={
+                            "estado": nuevo_estado,
+                            "vencimiento": fecha_vencimiento,
+                            "presentante": presentante
                         }, timeout=10)
                     except Exception as e:
                         print(f"Error enviando datos al backend: {e}")
