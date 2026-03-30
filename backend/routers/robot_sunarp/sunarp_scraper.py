@@ -17,7 +17,7 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
     driver = None
     try:
         driver = uc.Chrome(
-            options=options, use_subprocess=True)
+            options=options, use_subprocess=True,version_main=146)
         driver.get("https://sigueloplus.sunarp.gob.pe/siguelo/")
 
         wait = WebDriverWait(driver, 30)
