@@ -11,6 +11,15 @@ import FormularioCalculoCuotas from './FormularioCalculoCuotas'
 import ConfirmacionModals from './ConfirmacionModals'
 import { useCharacterCount } from './hooks/useCharacterCount'
 
+export const decodeToken = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload
+  } catch {
+    return null
+  }
+}
+
 export default function CrearCotizacion() {
   // --- ESTADO PRINCIPAL ---
 
@@ -418,6 +427,18 @@ export default function CrearCotizacion() {
     setShowModalJPG(false)
     setIsSubmitting(false)
   }
+
+  // Pre select de usuarios
+
+  useEffect(() => {
+    if (usuarios.length === 0) return
+
+    const payload = decodeToken(localStorage.getItem('access_token'))
+    if (!payload) return
+
+    const preSelect = usuarios.find((u) => u.colaborador.id + '' === payload.user_id)
+    if (preSelect) setUsuarioSeleccionado(preSelect.username)
+  }, [usuarios])
 
   // --- RENDERIZADO ---
 

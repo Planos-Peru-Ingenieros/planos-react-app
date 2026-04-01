@@ -19,6 +19,14 @@ const AppSidebar = () => {
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
+  const handleNavClick = (e) => {
+    if (e.target.closest('a')?.href?.includes('/logout')) {
+      e.preventDefault()
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      window.location.href = '/login'
+    }
+  }
   return (
     <CSidebar
       className="border-end"
@@ -42,7 +50,9 @@ const AppSidebar = () => {
         />
       </CSidebarHeader>
 
-      <AppSidebarNav items={navigation} />
+      <div onClick={handleNavClick}>
+        <AppSidebarNav items={navigation} />
+      </div>
 
       <CSidebarFooter className="border-top d-none d-lg-flex">
         <CSidebarToggler

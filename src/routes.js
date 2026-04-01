@@ -4,8 +4,6 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Cotizaciones = React.lazy(() => import('./views/cotizaciones/CotizacionesPage'))
 const Asistencia = React.lazy(() => import('./views/asistencia/Asistencia'))
 const FormularioRegistral = React.lazy(() => import('./views/formularios/FormularioRegistral'))
-
-// --- ESTA ES LA LÍNEA QUE TE FALTA ---
 const RobotSunarp = React.lazy(() => import('./views/robot/RobotSunarp'))
 
 const routes = [
@@ -14,8 +12,6 @@ const routes = [
   { path: '/cotizaciones', name: 'Cotizaciones', element: Cotizaciones },
   { path: '/asistencia', name: 'Asistencia', element: Asistencia },
   { path: '/formularios/registral', name: 'Formulario Registral', element: FormularioRegistral },
-  
-  // Ahora esta línea ya no dará error porque RobotSunarp ya está definido arriba
   { path: '/robot-sunarp', name: 'Robot Sunarp', element: RobotSunarp },
 ]
 
