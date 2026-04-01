@@ -30,7 +30,9 @@ export default function FormularioDatosCliente({
 
       {/* --- Teléfono --- */}
       <CCol md={6}>
-        <CFormLabel htmlFor="telefono">N° Celular Solicitante</CFormLabel>
+        <CFormLabel htmlFor="telefono">
+          N° Celular Solicitante <span style={{ color: 'red' }}>*</span>
+        </CFormLabel>
         <CFormInput
           type="text"
           name="telefono"
@@ -38,6 +40,8 @@ export default function FormularioDatosCliente({
           value={telefono}
           placeholder="987..."
           onChange={(e) => setTelefono(e.target.value)}
+          required
+          minLength={9}
         />
       </CCol>
 
