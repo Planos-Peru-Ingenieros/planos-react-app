@@ -43,12 +43,6 @@ const _nav = [
     to: '/asistencia',
     icon: <CIcon icon={cilPencil} customClassName="nav-icon" />,
   },
-  {
-    component: CNavItem,
-    name: 'Formulario Registral',
-    to: '/formularios/registral',
-    icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
-  },
   // --- SECCIÓN DE SALIDA ---
   {
     component: CNavTitle,

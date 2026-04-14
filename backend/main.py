@@ -5,7 +5,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import HOST, PORT
-from routers import cotizaciones, asistencia, sistema, formularios, robot
+from routers import cotizaciones, asistencia, sistema, robot
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
@@ -25,7 +25,6 @@ app.add_middleware(
 app.include_router(cotizaciones.router)
 app.include_router(asistencia.router)
 app.include_router(sistema.router)
-app.include_router(formularios.router)
 app.include_router(robot.router)
 
 
