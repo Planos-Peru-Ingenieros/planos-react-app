@@ -10,15 +10,7 @@ import FormularioDatosProyecto from './FormularioDatosProyecto'
 import FormularioCalculoCuotas from './FormularioCalculoCuotas'
 import ConfirmacionModals from './ConfirmacionModals'
 import { useCharacterCount } from './hooks/useCharacterCount'
-
-export const decodeToken = (token) => {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload
-  } catch {
-    return null
-  }
-}
+import { decodeToken } from './utils/jwt-decode'
 
 export default function CrearCotizacion() {
   // --- ESTADO PRINCIPAL ---
@@ -284,6 +276,16 @@ export default function CrearCotizacion() {
       }
     } catch (error) {
       console.error('❌ Error de conexión con Django (BD):', error)
+    }
+
+    const payload = decodeToken(localStorage.getItem('access_token'))
+    const IDS_SIN_EXCEL = ['99', '100']
+    const puedeGenerarExcel = payload && !IDS_SIN_EXCEL.includes(String(payload.user_id))
+
+    if (!puedeGenerarExcel) {
+      // Sin permiso para Excel: saltar directo al modal de PDF
+      setShowModal(true)
+      return
     }
 
     try {
