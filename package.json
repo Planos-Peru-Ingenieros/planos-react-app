@@ -4,11 +4,11 @@
   "description": "Planos Perú",
   "homepage": ".",
   "bugs": {
-    "url": "https://github.com/BrianVdeV/planos-react-app/issues"
+    "url": "https://github.com/Planos-Peru-Ingenieros/planos-react-app/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/BrianVdeV/planos-react-app"
+    "url": "https://github.com/Planos-Peru-Ingenieros/planos-react-app"
   },
   "license": "MIT",
   "author": "The CoreUI Team (https://github.com/orgs/coreui/people)",
