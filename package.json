@@ -1,6 +1,6 @@
 {
   "name": "planos-peru",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "description": "Planos Perú",
   "homepage": ".",
   "bugs": {
@@ -74,7 +74,7 @@
     "appId": "com.planosperu.electron",
     "publish": {
       "provider": "github",
-      "owner": "BrianVdev",
+      "owner": "Planos-Peru-Ingenieros",
       "repo": "planos-react-app",
       "releaseType": "release"
     }
