@@ -74,7 +74,7 @@
     "appId": "com.planosperu.electron",
     "publish": {
       "provider": "github",
-      "owner": "BrianVdev",
+      "owner": "Planos-Peru-Ingenieros",
       "repo": "planos-react-app",
       "releaseType": "release"
     }
