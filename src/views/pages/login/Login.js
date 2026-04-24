@@ -89,6 +89,7 @@ const Login = () => {
               </CCard>
               {/* ... resto del card */}
             </CCardGroup>
+            <pre>v. 1.0.35</pre>
           </CCol>
         </CRow>
       </CContainer>

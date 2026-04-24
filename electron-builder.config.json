@@ -12,12 +12,6 @@
   "directories": {
     "output": "dist"
   },
-  "publish": {
-    "provider": "github",
-    "owner": "Planos-Peru-Ingenieros",
-    "repo": "planos-react-app",
-    "releaseType": "release"
-  },
   "win": {
     "target": "nsis",
     "icon": "public/favicon.ico"
