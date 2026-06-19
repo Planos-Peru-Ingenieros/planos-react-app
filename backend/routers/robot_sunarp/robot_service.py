@@ -21,8 +21,8 @@ def iniciar_agente_hilo(agregar_log_func):
     stop_event.clear()
 
     # URL LOCAL (Para tus pruebas)
-    URL_BASE = "http://127.0.0.1:8000"
-    # URL_BASE = "https://intranet.planosperu.com.pe"
+    # URL_BASE = "http://127.0.0.1:8000"
+    URL_BASE = "https://intranet.planosperu.com.pe"
 
     logs_importantes = []
     logs_relleno = []
@@ -66,7 +66,8 @@ def iniciar_agente_hilo(agregar_log_func):
                 agregar_log_func(f"🚀 Procesando OT: {ot_visible}...", "info")
                 resultado = consultar_estado_sunarp(anio, titulo, oficina)
                 try:
-                    requests.patch(f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/", json=resultado, timeout=10)
+                    requests.patch(
+                        f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/", json=resultado, timeout=10)
                 except Exception as e:
                     print(f"Error enviando datos al backend: {e}")
                 time.sleep(5)
