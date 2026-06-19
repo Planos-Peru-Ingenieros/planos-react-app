@@ -21,8 +21,8 @@ def iniciar_agente_hilo(agregar_log_func):
     stop_event.clear()
 
     # URL LOCAL (Para tus pruebas)
-    # URL_BASE = "http://127.0.0.1:8000"
-    URL_BASE = "https://intranet.planosperu.com.pe"
+    URL_BASE = "http://127.0.0.1:8000"
+    # URL_BASE = "https://intranet.planosperu.com.pe"
 
     logs_importantes = []
     logs_relleno = []
@@ -62,39 +62,13 @@ def iniciar_agente_hilo(agregar_log_func):
                 titulo = exp.get('numero', 'N/A')
                 anio = exp.get('anio', 'N/A')
                 oficina = exp.get('oficina', 'LIMA').upper()
-                estado_previo = str(exp.get('estado', '')).strip().upper()
 
                 agregar_log_func(f"🚀 Procesando OT: {ot_visible}...", "info")
                 resultado = consultar_estado_sunarp(anio, titulo, oficina)
-                nuevo_estado_raw = resultado.get("estado", "Error")
-                fecha_vencimiento = resultado.get("vencimiento", "")
-                presentante = resultado.get("presentante", "")
-
-                if nuevo_estado_raw and "Error" not in nuevo_estado_raw:
-                    nuevo_estado = nuevo_estado_raw.strip().upper()
-                    if nuevo_estado == "EN CALIFICACION":
-                        nuevo_estado = "EN CALIFICACIÓN"
-                    if nuevo_estado == estado_previo:
-                        detalle = f"OT: {ot_visible} ({titulo}) -> Sigue en {nuevo_estado} (Vence: {fecha_vencimiento})"
-                        log_interno(detalle, "info", es_importante=False)
-                    else:
-                        detalle = f"OT: {ot_visible} ({titulo}) -> CAMBIÓ A: {nuevo_estado} (Vence: {fecha_vencimiento})"
-                        log_interno(detalle, "success", es_importante=True)
-                    try:
-                        requests.patch(f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/",
-                                       json={
-                            "estado": nuevo_estado,
-                            "vencimiento": fecha_vencimiento,
-                            "presentante": presentante
-                        }, timeout=10)
-                    except Exception as e:
-                        print(f"Error enviando datos al backend: {e}")
-
-                else:
-                    # ERROR EN SCRAPER
-                    log_interno(
-                        f"⚠️ OT: {ot_visible} | Falló consulta Sunarp.", "danger", es_importante=True)
-
+                try:
+                    requests.patch(f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/", json=resultado, timeout=10)
+                except Exception as e:
+                    print(f"Error enviando datos al backend: {e}")
                 time.sleep(5)
 
             log_interno(
