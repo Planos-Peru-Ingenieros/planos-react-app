@@ -23,7 +23,7 @@ def iniciar_agente_hilo(agregar_log_func):
     # URL LOCAL (Para tus pruebas)
     # URL_BASE = "http://127.0.0.1:8000"
     URL_BASE = "https://intranet.planosperu.com.pe"
-
+    AUTH_TOKEN = "6dd3482aacd442cc7e0632a381c9f7ec3d1f8389"
     logs_importantes = []
     logs_relleno = []
 
@@ -47,8 +47,8 @@ def iniciar_agente_hilo(agregar_log_func):
         # Mensajes de sistema siempre son importantes
         log_interno("Buscando expedientes en Intranet...",
                     "info", es_importante=True)
-
-        resp = requests.get(f"{URL_BASE}/api/sunarp/pendientes/", timeout=10)
+        resp = requests.get(f"{URL_BASE}/api/sunarp/pendientes/",
+                            timeout=10, headers={"Authorization": f"Token {AUTH_TOKEN}"})
 
         if resp.status_code == 200:
             expedientes = resp.json()
@@ -65,9 +65,13 @@ def iniciar_agente_hilo(agregar_log_func):
 
                 agregar_log_func(f"🚀 Procesando OT: {ot_visible}...", "info")
                 resultado = consultar_estado_sunarp(anio, titulo, oficina)
+                if resultado is None:
+                    log_interno(
+                        f"❌ Error al consultar OT: {ot_visible}. No se obtuvo resultado.", "danger")
+                    continue
                 try:
                     requests.patch(
-                        f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/", json=resultado, timeout=10)
+                        f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/", json=resultado, timeout=10, headers={"Authorization": f"Token {AUTH_TOKEN}"})
                 except Exception as e:
                     print(f"Error enviando datos al backend: {e}")
                 time.sleep(5)
