@@ -117,7 +117,7 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
         if api_data:
             return api_data
         else:
-            return {"error": "Timeout", "mensaje": "No se pudo capturar la respuesta de consultaTitulo"}
+            return None
 
     except Exception as e:
         print(f"Error Scraper: {e}")
