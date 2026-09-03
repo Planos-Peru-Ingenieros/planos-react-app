@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, dialog } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const fs = require('fs')
@@ -61,12 +61,38 @@ function createWindow() {
   }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+function setupAutoUpdater() {
+  // Descarga la actualización automáticamente en segundo plano
+  autoUpdater.autoDownload = true
+
+  // Evento que se dispara cuando la actualización ya se descargó
+  autoUpdater.on('update-downloaded', () => {
+    const dialogOpts = {
+      type: 'info',
+      buttons: ['Reiniciar ahora', 'Más tarde'],
+      title: 'Actualización disponible',
+      message: 'Una nueva versión de la aplicación ha sido descargada.',
+      detail: '¿Deseas reiniciar la aplicación ahora para aplicar los cambios?',
+    }
+
+    // Mostrar el cuadro de diálogo al usuario
+    dialog.showMessageBox(dialogOpts).then((returnValue) => {
+      if (returnValue.response === 0) {
+        // Si el usuario hace clic en "Reiniciar ahora" (índice 0)
+        autoUpdater.quitAndInstall()
+      }
+    })
+  })
+
+  autoUpdater.on('error', (err) => {
+    console.error('Error en el actualizador:', err)
+  })
+}
+
 app.whenReady().then(() => {
   createWindow()
-  autoUpdater.checkForUpdatesAndNotify()
+  setupAutoUpdater()
+  autoUpdater.checkForUpdates()
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
