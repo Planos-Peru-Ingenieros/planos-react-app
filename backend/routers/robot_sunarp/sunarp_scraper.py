@@ -1,10 +1,10 @@
 import time
+
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select, WebDriverWait
 
 
 def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
@@ -16,7 +16,7 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
 
     driver = None
     try:
-        driver = uc.Chrome(options=options, version_main=152)
+        driver = uc.Chrome(options=options)
         driver.get("https://sigueloplus.sunarp.gob.pe/siguelo/")
 
         wait = WebDriverWait(driver, 30)
