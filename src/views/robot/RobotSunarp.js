@@ -1,11 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { 
-  CCard, CCardBody, CCardHeader, CCol, CRow, CButton, 
-  CTable, CTableBody, CTableDataCell, CTableRow, CBadge, CAlert 
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCol,
+  CRow,
+  CButton,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableRow,
+  CBadge,
+  CAlert,
 } from '@coreui/react'
 import axios from 'axios'
 import { useReactToPrint } from 'react-to-print'
-import LogReport from './LogReport' // Importación desde la misma carpeta
 
 const RobotSunarp = () => {
   const [status, setStatus] = useState({ active: false, logs: [] })
@@ -21,8 +30,8 @@ const RobotSunarp = () => {
     try {
       const res = await axios.get('http://localhost:5000/robot/status')
       setStatus(res.data)
-    } catch (err) { 
-      console.error("Sin conexión al backend") 
+    } catch (err) {
+      console.error('Sin conexión al backend')
     }
   }
 
@@ -42,29 +51,19 @@ const RobotSunarp = () => {
               {status.active ? 'TRABAJANDO' : 'EN ESPERA'}
             </CAlert>
             <div className="d-grid gap-2">
-              <CButton 
-                color="primary" 
-                onClick={() => axios.post('http://localhost:5000/robot/start')} 
+              <CButton
+                color="primary"
+                onClick={() => axios.post('http://localhost:5000/robot/start')}
                 disabled={status.active}
               >
                 INICIAR
               </CButton>
-              <CButton 
-                color="danger" 
-                onClick={() => axios.post('http://localhost:5000/robot/stop')} 
+              <CButton
+                color="danger"
+                onClick={() => axios.post('http://localhost:5000/robot/stop')}
                 disabled={!status.active}
               >
                 DETENER
-              </CButton>
-
-              {/* BOTÓN EXPORTAR */}
-              <CButton 
-                color="success" 
-                variant="outline" 
-                onClick={() => handlePrint()}
-                disabled={status.logs.length === 0} // No imprimir si está vacío
-              >
-                📄 EXPORTAR REPORTE
               </CButton>
             </div>
           </CCardBody>
@@ -79,14 +78,26 @@ const RobotSunarp = () => {
               <CTableBody>
                 {status.logs.map((log, i) => (
                   <CTableRow key={i}>
-                    <CTableDataCell width="100"><strong>{log.hora}</strong></CTableDataCell>
+                    <CTableDataCell width="100">
+                      <strong>{log.hora}</strong>
+                    </CTableDataCell>
                     <CTableDataCell>
-                      <span className={log.mensaje.includes('cambió a') ? 'text-success fw-bold' : ''}>
+                      <span
+                        className={log.mensaje.includes('cambió a') ? 'text-success fw-bold' : ''}
+                      >
                         {log.mensaje}
                       </span>
                     </CTableDataCell>
                     <CTableDataCell width="80">
-                      <CBadge color={log.tipo === 'success' ? 'success' : log.tipo === 'danger' ? 'danger' : 'info'}>
+                      <CBadge
+                        color={
+                          log.tipo === 'success'
+                            ? 'success'
+                            : log.tipo === 'danger'
+                              ? 'danger'
+                              : 'info'
+                        }
+                      >
                         {log.tipo.toUpperCase()}
                       </CBadge>
                     </CTableDataCell>
@@ -104,11 +115,6 @@ const RobotSunarp = () => {
           </CCardBody>
         </CCard>
       </CCol>
-
-      {/* ELEMENTO OCULTO PARA IMPRESIÓN */}
-      <div style={{ display: 'none' }}>
-        <LogReport ref={componentRef} logs={status.logs} />
-      </div>
     </CRow>
   )
 }
