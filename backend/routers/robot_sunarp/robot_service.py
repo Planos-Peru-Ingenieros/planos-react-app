@@ -1,17 +1,17 @@
-import sys
 import os
+import sys
 import threading
 import time
 from datetime import datetime
+
 import requests
+
+from .sunarp_scraper import consultar_estado_sunarp
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.append(current_dir)
 
-try:
-    from sunarp_scraper import consultar_estado_sunarp
-except ImportError:
-    from .sunarp_scraper import consultar_estado_sunarp
 
 stop_event = threading.Event()
 
@@ -20,7 +20,6 @@ def iniciar_agente_hilo(agregar_log_func):
     global stop_event
     stop_event.clear()
 
-    # URL LOCAL (Para tus pruebas)
     # URL_BASE = "http://127.0.0.1:8000"
     URL_BASE = "https://intranet.planosperu.com.pe"
     AUTH_TOKEN = "6dd3482aacd442cc7e0632a381c9f7ec3d1f8389"
@@ -64,24 +63,51 @@ def iniciar_agente_hilo(agregar_log_func):
                 oficina = exp.get('oficina', 'LIMA').upper()
 
                 agregar_log_func(f"🚀 Procesando OT: {ot_visible}...", "info")
+
+                # Llamada al scraper
                 resultado = consultar_estado_sunarp(anio, titulo, oficina)
+
+                # 1. Validar si el scraper devolvió un None (error inesperado)
                 if resultado is None:
                     log_interno(
-                        f"❌ Error al consultar OT: {ot_visible}. No se obtuvo resultado.", "danger")
+                        f"❌ Error al consultar OT {ot_visible}. No se obtuvo resultado de la web.", "danger")
                     continue
+
+                # 2. Validar si el scraper devolvió nuestro JSON de error personalizado
+                if isinstance(resultado, dict) and "error" in resultado:
+                    tipo_error = resultado.get("error")
+                    mensaje_error = resultado.get("mensaje")
+                    # Imprimimos el error exacto que capturó el scraper (Chrome, Intentos, etc.)
+                    log_interno(
+                        f"❌ Error en OT {ot_visible} [{tipo_error}]: {mensaje_error}", "danger")
+                    continue
+
+                # 3. Si todo está correcto, actualizar en la intranet
                 try:
-                    requests.patch(
-                        f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/", json=resultado, timeout=10, headers={"Authorization": f"Token {AUTH_TOKEN}"})
+                    patch_resp = requests.patch(
+                        f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/",
+                        json=resultado,
+                        timeout=10,
+                        headers={"Authorization": f"Token {AUTH_TOKEN}"}
+                    )
+                    if patch_resp.status_code in [200, 201]:
+                        log_interno(
+                            f"✅ OT {ot_visible} actualizada correctamente.", "success", es_importante=False)
+                    else:
+                        log_interno(
+                            f"⚠️ Error al actualizar OT {ot_visible} en backend. Status: {patch_resp.status_code}", "warning")
                 except Exception as e:
-                    print(f"Error enviando datos al backend: {e}")
+                    log_interno(
+                        f"❌ Error de red enviando OT {ot_visible} al backend: {str(e)}", "danger")
+
                 time.sleep(5)
 
             log_interno(
-                "🏁 Proceso finalizado. Enviando reporte ordenado...", "info")
+                "🏁 Proceso finalizado. El robot ha terminado su cola de tareas.", "info")
 
         else:
             log_interno(
-                f"❌ Error API Pendientes: {resp.status_code}", "danger")
+                f"❌ Error API Pendientes: No se pudo conectar a la intranet (HTTP {resp.status_code})", "danger")
 
     except Exception as e:
         log_interno(f"❌ Error Crítico Robot: {str(e)}", "danger")
