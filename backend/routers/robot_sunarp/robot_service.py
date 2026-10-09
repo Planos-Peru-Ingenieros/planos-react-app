@@ -61,8 +61,10 @@ def iniciar_agente_hilo(agregar_log_func):
                 titulo = exp.get('numero', 'N/A')
                 anio = exp.get('anio', 'N/A')
                 oficina = exp.get('oficina', 'LIMA').upper()
+                estado_anterior = exp.get('estado', 'N/A')
 
-                agregar_log_func(f"🚀 Procesando OT: {ot_visible}...", "info")
+                agregar_log_func(
+                    f"🚀 Procesando OT: {ot_visible}... {estado_anterior}", "info")
 
                 # Llamada al scraper
                 resultado = consultar_estado_sunarp(anio, titulo, oficina)
@@ -81,21 +83,23 @@ def iniciar_agente_hilo(agregar_log_func):
                     log_interno(
                         f"❌ Error en OT {ot_visible} [{tipo_error}]: {mensaje_error}", "danger")
                     continue
-
+                lst_titulo = resultado.get('lstTitulo', [])
+                acto_referencia = lst_titulo[0]
+                estado_actual = acto_referencia.get('estadoActual', '')
                 # 3. Si todo está correcto, actualizar en la intranet
                 try:
-                    patch_resp = requests.patch(
+                    requests.patch(
                         f"{URL_BASE}/api/sunarp/{exp['id']}/update-sunarp/",
                         json=resultado,
                         timeout=10,
                         headers={"Authorization": f"Token {AUTH_TOKEN}"}
                     )
-                    if patch_resp.status_code in [200, 201]:
+                    if estado_actual != estado_anterior.upper():
                         log_interno(
-                            f"✅ OT {ot_visible} actualizada correctamente.", "success", es_importante=False)
+                            f"✅ OT {ot_visible} actualizado a {estado_actual}", "success", es_importante=False)
                     else:
                         log_interno(
-                            f"⚠️ Error al actualizar OT {ot_visible} en backend. Status: {patch_resp.status_code}", "warning")
+                            f"ℹ️ OT {ot_visible} sin cambios.", "info")
                 except Exception as e:
                     log_interno(
                         f"❌ Error de red enviando OT {ot_visible} al backend: {str(e)}", "danger")

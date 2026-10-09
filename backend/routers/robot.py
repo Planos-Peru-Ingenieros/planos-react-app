@@ -12,7 +12,7 @@ def agregar_log(mensaje, tipo="info"):
     hora = datetime.now().strftime("%H:%M:%S")
     estado_actual["logs"].insert(
         0, {"hora": hora, "mensaje": mensaje, "tipo": tipo})
-    estado_actual["logs"] = estado_actual["logs"][:20]
+    estado_actual["logs"] = estado_actual["logs"][:100]
 
 
 @router.get("/status")
