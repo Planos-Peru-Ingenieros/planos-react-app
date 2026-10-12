@@ -33,19 +33,20 @@ a = Analysis(
         "uvicorn.loops.auto",
         "uvicorn.loops.asyncio",
         "uvicorn.protocols",
-        "sunarp_scraper", # CORRECCIÓN: Se añadió la coma faltante aquí
+        "sunarp_scraper",
+        "pycryptodome",
         "asgiref",
         "fastapi",
         "pydantic",
         "pydantic_core._pydantic_core",
-        "requests",    
-        "openpyxl",      
-        "fitz",     
-        "xlwings"        
+        "requests",
+        "openpyxl",
+        "fitz",
+        "xlwings"
     ],
     hookspath=[],
     runtime_hooks=[],
-    excludes=["uvloop"], 
+    excludes=["uvloop"],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -53,7 +54,7 @@ a = Analysis(
 )
 
 pyz = PYZ(
-    a.pure, 
+    a.pure,
     a.zipped_data,
     cipher=block_cipher
 )
@@ -68,7 +69,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True, 
+    console=True,
     icon='public/favicon.ico'
 )
 

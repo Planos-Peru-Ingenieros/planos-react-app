@@ -13,9 +13,20 @@ export default function useCotizacionData() {
 
   useEffect(() => {
     setLoading(true)
+    const token = import.meta.env.VITE_API_TOKEN
 
-    const fetchCotizaciones = axios.get('https://intranet.planosperu.com.pe/api/tipot/')
-    const fetchUsuarios = axios.get('https://intranet.planosperu.com.pe/api/users/')
+    // 2. Configurar los headers de autorización
+    const axiosConfig = {
+      headers: {
+        Authorization: `Token ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+    const fetchCotizaciones = axios.get(
+      'https://intranet.planosperu.com.pe/api/tipot/',
+      axiosConfig,
+    )
+    const fetchUsuarios = axios.get('https://intranet.planosperu.com.pe/api/users/', axiosConfig)
 
     Promise.all([fetchCotizaciones, fetchUsuarios])
       .then((responses) => {

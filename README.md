@@ -2,6 +2,12 @@
 
 El aplicativo de Planos Peru usa electron y python para el manejo de excel.
 
+## 🌟 Funcionalidades
+
+- Bot Automatizado: entra a la pagina de Siguelo SUNARP y rellena los datos, saltando la verificación de Cloudflare, para verificar el estado del Titulo.
+- Cotizaciones: formulario para automatizar el llenado de Excel de cotizaciones.
+- Asistencia: consulta la API de un reconocimiento facial local para la asistencia de trabajadores
+ 
 ## Tecnologias Principales
 
 - Front End: React, CoreUI, Vite
@@ -28,7 +34,7 @@ El aplicativo de Planos Peru usa electron y python para el manejo de excel.
 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/kimberly31-HC/planosperu-app
+git clone https://github.com/Planos-Peru-Ingenieros/planos-react-app
 cd planosperu-app
 ```
 

@@ -65,9 +65,7 @@ export default function FormularioDatosProyecto({
           required
           value={pisos}
           onChange={(e) => {
-            if (/^\d{0,2}$/.test(e.target.value)) {
-              setPisos(e.target.value)
-            }
+            setPisos(e.target.value)
           }}
         />
       </CCol>
