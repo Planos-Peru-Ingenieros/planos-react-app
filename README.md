@@ -2,48 +2,51 @@
 
 El aplicativo de Planos Peru usa electron y python para el manejo de excel.
 
-## Table of Contents
+## Tecnologias Principales
 
-- [Inicio](#inicio)
-- [Instalación](#instalacion)
-- [Uso Basico](#uso-basico)
-- [Estructura](#estructura)
-- [Creadores](#creadores)
+- Front End: React, CoreUI, Vite
+- Contenedor de escritorio: Electron
+- Backend / Procesamiento: Python, FastAPI
 
-## Inicio
+## Tabla de Contenidos
 
-- Clone the repo: `git clone https://github.com/kimberly31-HC/planosperu-app`
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación y Configuración](#inicio)
+- [Estructura del Proyecto](#estructura)
+- [Entorno de Desarrollo (Local)](#entorno)
+- [Construcción y despliegue](#construccion)
+- [Solucion de Problemas Comunes](#solucion)
 
-### Instalación
+## Requisitos Previos
+
+- Node.js
+- Python 3.x
+- Git 
+
+## Instalación y Configuración
+
+1. Clonar el repositorio
 
 ```bash
-$ npm install
+git clone https://github.com/kimberly31-HC/planosperu-app
+cd planosperu-app
 ```
 
-### Basic usage
+2. Instalar dependencias de Node
 
 ```bash
-# dev server with hot reload at http://localhost:3000
-$ npm start
-```
-
-Navigate to [http://localhost:3000](http://localhost:3000). The app will automatically reload if you change any of the source files.
-
-#### Build
-
-Run `build` to build the project. The build artifacts will be stored in the `build/` directory.
-
-```bash
-# build for production with minification
-$ npm run build
+npm install
 ```
 
 ## Escructura
 
-Within the download you'll find the following directories and files, logically grouping common assets and providing both compiled and minified variations. You'll see something like this:
+El proyecto está organizado de la siguiente manera para separar la lógica de la vista, la configuración y el procesamiento en backend:
 
 ```
-coreui-free-react-admin-template
+planos-react-app
+├── backend/         # Scripts de Python para manejo de Excel
+│   └── main.py      # Punto de entrada del procesamiento
+│
 ├── public/          # static files
 │   ├── favicon.ico
 │   └── manifest.json
@@ -67,35 +70,47 @@ coreui-free-react-admin-template
 └── vite.config.mjs  # vite config
 ```
 
-## PASOS PARA EJECUTAR
 
-- PROBAR LOCALMENTE (ABRE EL APP del BACKEND)
+## Entorno de Desarrollo (Local)
+Para probar la aplicación localmente, necesitas levantar tanto el entorno frontend como el backend en Python.
 
-1. npm run build
-2. npm run electron-dev
+```bash
+npm start
+```
 
-- PROBAR LOCALMENTE CON MODIFICACIONES COMO AÑADIR DOCUMENTOS EXCEL ENTRE OTROS (ABRE EL APP del BACKEND O SI DESEAS EJECUTA LA APLICACION EN GENERAL)
+```bash
+python backend/main.py
+```
 
-1. npm run build
-2. npm run dist
-3. npm run electron-dev
 
-- PUBLICAR VERSIONES
+## Construcción y despliegue
 
-1. Cambiar la version del PACKAGE.JSON
-2. npm run build
-3. npm run py-build
-4. export GH_TOKEN=
-5. npm run release (DEBE DECIR 100% PARA PODER VER LA NUEVA VERSION)
+1. Actualizar la versión: Sube la versión en el archivo package.json (ej. de 1.0.0 a 1.0.1).
+2. Construir el Frontend (Minificado):
+```
+npm run build
+```
+3. Construir el ejecutable de Python:
+```
+npm run py-build
+```
+4. Configurar el Token de GitHub (Necesario para Release):
+```
+export GH_TOKEN=<TU_TOKEN>
+```
+5. Generar el Release en GitHub:
+```
+npm run release
+```
 
-- INICIAR EL PROYECTO
+## Solución de Problemas Comunes
 
-FROND y BACK: npm run electron-dev
+Error de Caché con Electron Builder:
+Si al intentar empaquetar o correr la aplicación encuentras un error relacionado con Electron Builder en Windows, configura la ruta de caché manualmente ejecutando:
 
----- PARA FLASK -----
-pip show pyinstaller
-pip install pyinstaller
-python -m PyInstaller --onefile app.py
+```
+export ELECTRON_BUILDER_CACHE="C:\electron-cache"
+```
 
 ## Creadores
 

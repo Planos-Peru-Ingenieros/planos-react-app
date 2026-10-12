@@ -185,7 +185,6 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
                 if api_data:
                     payload_encriptado = api_data.get("cmVzcG9uc2U")
                     desencriptado = desencriptar_cryptojs(payload_encriptado)
-                    print(desencriptado)
                     return desencriptado
                 else:
                     print("No se logró capturar la API en este intento.")
