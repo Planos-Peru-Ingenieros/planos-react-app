@@ -74,10 +74,7 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
     except Exception as e:
         error_msg = str(e).lower()
         if "version of chrome" in error_msg or "chrome version" in error_msg or "session not created" in error_msg:
-            return {
-                "error": "Error de versión de Chrome",
-                "mensaje": "Tu versión de Chrome no coincide con ChromeDriver. Actualiza el navegador o la librería undetected-chromedriver."
-            }
+            return {"error": "Error de versión de Chrome", "mensaje": "Tu versión de Chrome no coincide."}
         else:
             return {"error": "Error al iniciar el navegador", "mensaje": str(e)}
 
@@ -86,6 +83,7 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
 
         interceptor_js = """
         window.__sunarpApiData = null;
+        window.__sunarpApiDetalle = null;
 
         // Interceptar peticiones XMLHttpRequest
         const origOpen = XMLHttpRequest.prototype.open;
@@ -93,6 +91,9 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
             this.addEventListener('load', function() {
                 if (url.includes('/consultaTitulo') || this.responseURL.includes('/consultaTitulo')) {
                     try { window.__sunarpApiData = JSON.parse(this.responseText); } catch(e) {}
+                }
+                if (url.includes('/detalleTitulo') || this.responseURL.includes('/detalleTitulo')) {
+                    try { window.__sunarpApiDetalle = JSON.parse(this.responseText); } catch(e) {}
                 }
             });
             origOpen.apply(this, arguments);
@@ -106,23 +107,19 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
             if (url.includes('/consultaTitulo')) {
                 response.clone().json().then(data => { window.__sunarpApiData = data; }).catch(e => {});
             }
+            if (url.includes('/detalleTitulo')) {
+                response.clone().json().then(data => { window.__sunarpApiDetalle = data; }).catch(e => {});
+            }
             return response;
         };
         """
 
-        # -------------------------------------------------------------------------
-        # 2. SISTEMA DE REINTENTOS (MÁXIMO 2 INTENTOS)
-        # -------------------------------------------------------------------------
         for intento in range(1, 3):
             print(f"\n--- Iniciando intento {intento} de 2 ---")
             try:
-                # Recargar la página limpia en cada intento
                 driver.get("https://sigueloplus.sunarp.gob.pe/siguelo/")
-
-                # Inyectar interceptor lo más rápido posible
                 driver.execute_script(interceptor_js)
 
-                # Cerrar términos iniciales si aparecen
                 try:
                     btn = WebDriverWait(driver, 5).until(EC.element_to_be_clickable(
                         (By.CSS_SELECTOR, "button.btn-sunarp-cyan")))
@@ -130,13 +127,11 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
                 except:
                     pass
 
-                # Selección de Oficina y Año (Usando esperas explícitas para mayor rapidez y seguridad)
                 Select(wait.until(EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "select[id*='Oficina']")))).select_by_visible_text(oficina)
                 Select(wait.until(EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "select[id*='Anio']")))).select_by_visible_text(str(anio))
 
-                # Ingreso de Título
                 input_t = wait.until(
                     EC.presence_of_element_located((By.NAME, "numeroTitulo")))
                 driver.execute_script(
@@ -148,22 +143,28 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
                 print("Esperando verificación de seguridad (Cloudflare)...")
                 time.sleep(8)
 
-                # Click en Buscar
                 btn_buscar = wait.until(EC.element_to_be_clickable(
                     (By.XPATH, "//button[contains(., 'BUSCAR')]")))
                 driver.execute_script("arguments[0].click();", btn_buscar)
 
-                # Esperar y extraer JSON
+                # 👇 3. ESPERAR Y EXTRAER AMBAS APIS
                 api_data = None
+                api_detalle = None
                 for _ in range(15):
                     time.sleep(1)
-                    api_data = driver.execute_script(
-                        "return window.__sunarpApiData;")
-                    if api_data:
+                    if not api_data:
+                        api_data = driver.execute_script(
+                            "return window.__sunarpApiData;")
+                    if not api_detalle:
+                        api_detalle = driver.execute_script(
+                            "return window.__sunarpApiDetalle;")
+
+                    # Salimos del bucle si ya tenemos ambos
+                    if api_data and api_detalle:
                         break
 
-                # Manejo del RECUADRO "OK" por si saltó una alerta de bloqueo
-                if not api_data:
+                # Manejo del RECUADRO "OK" (Se repite la lógica de validación para ambos)
+                if not api_data or not api_detalle:
                     try:
                         btn_ok = driver.find_element(
                             By.XPATH, "//button[text()='OK']")
@@ -174,18 +175,34 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
                                 "Aviso de seguridad cerrado. Esperando respuesta...")
                             for _ in range(10):
                                 time.sleep(1)
-                                api_data = driver.execute_script(
-                                    "return window.__sunarpApiData;")
-                                if api_data:
+                                if not api_data:
+                                    api_data = driver.execute_script(
+                                        "return window.__sunarpApiData;")
+                                if not api_detalle:
+                                    api_detalle = driver.execute_script(
+                                        "return window.__sunarpApiDetalle;")
+                                if api_data and api_detalle:
                                     break
                     except:
                         pass
 
-                # 3. EVALUACIÓN DEL INTENTO
+                # 👇 4. EVALUACIÓN Y RETORNO (Desencriptamos ambas)
                 if api_data:
-                    payload_encriptado = api_data.get("cmVzcG9uc2U")
-                    desencriptado = desencriptar_cryptojs(payload_encriptado)
-                    return desencriptado
+                    payload_consulta = api_data.get("cmVzcG9uc2U")
+                    data_consulta = desencriptar_cryptojs(
+                        payload_consulta) if payload_consulta else None
+
+                    data_detalle = None
+                    if api_detalle:
+                        payload_detalle = api_detalle.get("cmVzcG9uc2U")
+                        data_detalle = desencriptar_cryptojs(
+                            payload_detalle) if payload_detalle else None
+
+                    # Retornamos un diccionario con ambas datas separadas para mayor control
+                    return {
+                        "consulta": data_consulta,
+                        "detalle": data_detalle
+                    }
                 else:
                     print("No se logró capturar la API en este intento.")
 
@@ -193,14 +210,10 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
                 print(
                     f"Ocurrió un problema durante el intento {intento}: {str(e)}")
 
-            # Si llegamos aquí y es el primer intento, esperamos un poco antes de recargar
             if intento == 1:
                 print("Recargando la página para el segundo intento...")
                 time.sleep(2)
 
-        # -------------------------------------------------------------------------
-        # 4. MENSAJE DE ERROR SI FALLÓ EL SEGUNDO INTENTO
-        # -------------------------------------------------------------------------
         return {
             "error": "Error de recuperación de API",
             "mensaje": "No se logró recuperar la API de Sunarp después de 2 intentos. Es posible que Cloudflare esté bloqueando la consulta temporalmente."
