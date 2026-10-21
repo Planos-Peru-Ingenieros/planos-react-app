@@ -20,8 +20,8 @@ def iniciar_agente_hilo(agregar_log_func):
     global stop_event
     stop_event.clear()
 
-    # URL_BASE = "http://127.0.0.1:8000"
-    URL_BASE = "https://intranet.planosperu.com.pe"
+    URL_BASE = "http://127.0.0.1:8000"
+    # URL_BASE = "https://intranet.planosperu.com.pe"
     AUTH_TOKEN = "6dd3482aacd442cc7e0632a381c9f7ec3d1f8389"
     logs_importantes = []
     logs_relleno = []

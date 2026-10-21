@@ -199,10 +199,15 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
                             payload_detalle) if payload_detalle else None
 
                     # Retornamos un diccionario con ambas datas separadas para mayor control
-                    return {
-                        "consulta": data_consulta,
-                        "detalle": data_detalle
-                    }
+                    resultado = {}
+
+                    if data_consulta:
+                        resultado.update(data_consulta)
+
+                    if data_detalle:
+                        resultado.update(data_detalle)
+
+                    return resultado
                 else:
                     print("No se logró capturar la API en este intento.")
 
