@@ -155,7 +155,7 @@ export default function CrearCotizacion() {
         } else {
           // ... (el resto de esta lógica estaba bien) ...
           let porcentajes = []
-          if (cuotas === 2) porcentajes = [0.55, 0.45]
+          if (cuotas === 2) porcentajes = [0.50, 0.50]
           else if (cuotas === 3) porcentajes = [0.35, 0.35, 0.3]
           else if (cuotas === 4) porcentajes = [0.3, 0.25, 0.25, 0.2]
 
