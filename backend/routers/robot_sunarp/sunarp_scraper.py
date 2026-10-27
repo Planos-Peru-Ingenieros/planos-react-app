@@ -124,11 +124,16 @@ def consultar_estado_sunarp(anio, numero_titulo, oficina="LIMA"):
 
                 # Cerrar términos iniciales si aparecen
                 try:
-                    btn = WebDriverWait(driver, 5).until(EC.element_to_be_clickable(
-                        (By.CSS_SELECTOR, "button.btn-sunarp-cyan")))
-                    driver.execute_script("arguments[0].click();", btn)
+                    btn_promo = WebDriverWait(driver, 5).until(EC.element_to_be_clickable(
+                        (By.CSS_SELECTOR, "button.promo-close")))
+                    driver.execute_script("arguments[0].click();", btn_promo)
                 except:
                     pass
+
+                # Cerrar términos iniciales (botón cyan) después de la promo
+                btn_cyan = WebDriverWait(driver, 5).until(EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, "button.btn-sunarp-cyan")))
+                driver.execute_script("arguments[0].click();", btn_cyan)
 
                 # Selección de Oficina y Año (Usando esperas explícitas para mayor rapidez y seguridad)
                 Select(wait.until(EC.presence_of_element_located(
