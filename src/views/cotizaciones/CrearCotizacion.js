@@ -104,6 +104,10 @@ export default function CrearCotizacion() {
             detallesValue =
               'Se elaborará planos y documentos de un inmueble georeferenciados con coordenadas UTM, segun normativas vigentes de los Registros Públicos.'
             break
+          case 'VIS-PRE':
+            detallesValue =
+              'Se elaborará planos y documentos para el inicio de la prescripción adquisitiva de dominio mediante la Elaboración del Expediente visación de planos para el Municipio, según normativa vigente.'
+            break
           default:
             detallesValue = 'Se elaborará planos y documentos para , según normativa vigente.'
             break
