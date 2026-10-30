@@ -41,7 +41,7 @@ def generar_excel_cotizacion(data):
         hoja = wb.sheets[0]
 
         # --- Lógica de desglose de texto (Detalles) ---
-        limites_detalles = [15, 100]
+        limites_detalles = [15, 120]
         partes = []
         texto_restante = detalles.strip()
         for limite in limites_detalles:
